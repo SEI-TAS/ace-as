@@ -10,7 +10,7 @@ import se.sics.ace.as.DBConnector;
 import se.sics.ace.coap.as.CoapDBConnector;
 import se.sics.ace.coap.as.CoapsAS;
 import se.sics.ace.examples.KissPDP;
-import se.sics.ace.examples.PostgreSQLDBCreator;
+import se.sics.ace.examples.PostgreSQLDBAdapter;
 import se.sics.ace.examples.KissTime;
 
 import java.io.IOException;
@@ -38,13 +38,13 @@ public class Test {
         String userName = "aceuser";
         String userPwd = "pwd";
         String rootPwd = "z5imVxzKw";
-        PostgreSQLDBCreator creator = new PostgreSQLDBCreator();
-        creator.setParams(userName, userPwd, DBConnector.dbName, null);
-        creator.createUser(rootPwd);
-        creator.createDBAndTables(rootPwd);
+        PostgreSQLDBAdapter dbAdapter = new PostgreSQLDBAdapter();
+        dbAdapter.setParams(userName, userPwd, DBConnector.dbName, null);
+        dbAdapter.createUser(rootPwd);
+        dbAdapter.createDBAndTables(rootPwd);
 
         OneKey asKey = OneKey.generateKey(AlgorithmID.ECDSA_256);
-        CoapDBConnector dbCon = new CoapDBConnector(PostgreSQLDBCreator.DEFAULT_DB_URL, userName, userPwd);
+        CoapDBConnector dbCon = new CoapDBConnector(dbAdapter, PostgreSQLDBAdapter.DEFAULT_DB_URL, userName, userPwd);
         CoapsAS authorizationServer = new CoapsAS("myid", dbCon,
                 KissPDP.getInstance("src/main/resources/acl.json", dbCon), new KissTime(), asKey);
 
