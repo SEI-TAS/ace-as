@@ -11,6 +11,7 @@ import se.sics.ace.coap.as.CoapDBConnector;
 import se.sics.ace.coap.as.CoapsAS;
 import se.sics.ace.examples.KissPDP;
 import se.sics.ace.examples.PostgreSQLDBCreator;
+import se.sics.ace.examples.KissTime;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -43,18 +44,18 @@ public class Test {
         keyTypes.add("PSK");
         keyTypes.add("RPK");
 
-        OneKey publicKey;
-        OneKey key = OneKey.generateKey(AlgorithmID.ECDSA_256);
-        publicKey = key.PublicKey();
-
+        OneKey asKey = OneKey.generateKey(AlgorithmID.ECDSA_256);
         CoapDBConnector dbCon = new CoapDBConnector(PostgreSQLDBCreator.DEFAULT_DB_URL, userName, userPwd);
         CoapsAS authorizationServer = new CoapsAS("myid", dbCon,
-                KissPDP.getInstance("src/main/resources/acl.json", dbCon), null, null);
+                KissPDP.getInstance("src/main/resources/acl.json", dbCon), new KissTime(), asKey);
 
         Set<String> profiles = new HashSet<>();
         profiles.add("coap_dtls");
         keyTypes.clear();
         keyTypes.add("RPK");
+
+        OneKey key = OneKey.generateKey(AlgorithmID.ECDSA_256);
+        OneKey publicKey = key.PublicKey();
         dbCon.addClient("clientA", profiles, null, null, keyTypes, null,
                 publicKey);
 
