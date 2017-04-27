@@ -1,0 +1,28 @@
+[
+  ["ni:///sha-256;xzLa24yOBeCkos3VFzD2gd83Urohr9TsXqY9nhdDN0w", "clientA", "clientB", "clientC", "clientD"],
+  ["ni:///sha-256;xzLa24yOBeCkos3VFzD2gd83Urohr9TsXqY9nhdDN0w", "rs1", "rs2", "rs3", "rs5", "rs6", "rs7"],
+  {
+    "clientA" : {
+      "rs1" : ["r_temp", "rw_config"],
+      "rs2" : ["r_light"],
+      "rs5" : ["failTokenNotImplemented"]
+    },
+    "clientB" : {
+      "rs1" : ["r_temp", "co2"],
+      "rs2" : ["r_light", "r_config", "failTokenType"],
+      "rs3" : ["rw_valve", "r_pressure", "failTokenType", "failProfile"],
+      "rs4" : ["failProfile"],
+      "rs6" : ["co2"],
+      "rs7" : ["co2"]
+    },
+    "clientC" : {
+      "rs3" : ["r_valve", "r_pressure"],
+      "rs6" : ["r_valve"]
+    },
+    "clientD" : {
+      "rs1" : ["r_temp", "rw_config"],
+      "rs2" : ["r_light"],
+      "rs5" : ["failTokenNotImplemented"]
+    }
+  }
+]x
