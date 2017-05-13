@@ -65,7 +65,7 @@ public class AuthorizationServer {
 
         // TODO: check if this asymetric key is actually needed if RPK is not used....
         OneKey asKey = OneKey.generateKey(AlgorithmID.ECDSA_256);
-        coapServer = new CoapsAS("myid", dbCon,
+        coapServer = new CoapsAS("TestAS", dbCon,
                 KissPDP.getInstance("src/main/resources/acl.json", dbCon), new KissTime(), asKey);
 
     }
@@ -75,8 +75,7 @@ public class AuthorizationServer {
         //OneKey key = OneKey.generateKey(AlgorithmID.ECDSA_256);
         //OneKey rsPublicKey = key.PublicKey();
         Set<String> auds = new HashSet<>();
-        auds.add("sensors");
-        auds.add("actuators");
+        auds.add("rs1");
         Set<String> scopes = new HashSet<>();
         scopes.add("r_temp");
         scopes.add("co2");
