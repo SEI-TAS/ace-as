@@ -43,7 +43,7 @@ public class AuthorizationServer {
         supportedProfiles.add("coap_dtls");
         supportedKeyTypes.add("PSK");
         supportedTokenTypes.add(AccessTokenFactory.CWT_TYPE);
-        supportedCOSEParams.add(new COSEparams(MessageTag.Sign1, AlgorithmID.ECDSA_256, AlgorithmID.Direct));
+        supportedCOSEParams.add(new COSEparams(MessageTag.Encrypt0, AlgorithmID.AES_CCM_16_64_256, AlgorithmID.Direct));
 
         CBORObject keyData = CBORObject.NewMap();
         keyData.Add(KeyKeys.KeyType.AsCBOR(), KeyKeys.KeyType_Octet);
@@ -64,9 +64,9 @@ public class AuthorizationServer {
         dbCon = new CoapDBConnector(dbAdapter, PostgreSQLDBAdapter.DEFAULT_DB_URL, userName, userPwd);
 
         // TODO: check if this asymetric key is actually needed if RPK is not used....
-        OneKey asKey = OneKey.generateKey(AlgorithmID.ECDSA_256);
+        //OneKey asKey = OneKey.generateKey(AlgorithmID.ECDSA_256);
         coapServer = new CoapsAS("TestAS", dbCon,
-                KissPDP.getInstance("src/main/resources/acl.json", dbCon), new KissTime(), asKey);
+                KissPDP.getInstance("src/main/resources/acl.json", dbCon), new KissTime(), null);
 
     }
 
