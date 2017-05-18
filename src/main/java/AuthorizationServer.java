@@ -2,6 +2,7 @@ import COSE.*;
 import com.upokecenter.cbor.CBORObject;
 import se.sics.ace.AceException;
 import se.sics.ace.COSEparams;
+import se.sics.ace.TimeProvider;
 import se.sics.ace.as.AccessTokenFactory;
 import se.sics.ace.as.DBConnector;
 import se.sics.ace.coap.as.CoapDBConnector;
@@ -12,7 +13,6 @@ import se.sics.ace.examples.PostgreSQLDBAdapter;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.Base64;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -24,7 +24,7 @@ public class AuthorizationServer {
             20, 21, 22, 23, 24, 25, 26, 27,28, 29, 30, 31, 32};
     private OneKey sharedKey;
 
-    private static long resourceServerKnownExpiration = 1000000L;
+    private static long howLongTokensLast = 1000000L;
 
     private final String userName = "aceuser";
     private final String userPwd = "pwd";
@@ -38,6 +38,7 @@ public class AuthorizationServer {
     private PostgreSQLDBAdapter dbAdapter;
     private CoapsAS coapServer;
     private CoapDBConnector dbCon;
+    private TimeProvider timeProvider;
 
     public AuthorizationServer() throws AceException, IOException, CoseException {
         supportedProfiles.add("coap_dtls");
@@ -49,6 +50,8 @@ public class AuthorizationServer {
         keyData.Add(KeyKeys.KeyType.AsCBOR(), KeyKeys.KeyType_Octet);
         keyData.Add(KeyKeys.Octet_K.AsCBOR(), CBORObject.FromObject(sharedKey256Bytes));
         sharedKey = new OneKey(keyData);
+
+        timeProvider = new KissTime();
 
         dbAdapter = new PostgreSQLDBAdapter();
         dbAdapter.setParams(userName, userPwd, DBConnector.dbName, null);
@@ -66,7 +69,7 @@ public class AuthorizationServer {
         // TODO: check if this asymetric key is actually needed if RPK is not used....
         //OneKey asKey = OneKey.generateKey(AlgorithmID.ECDSA_256);
         coapServer = new CoapsAS("TestAS", dbCon,
-                KissPDP.getInstance("src/main/resources/acl.json", dbCon), new KissTime(), null);
+                KissPDP.getInstance("src/main/resources/acl.json", dbCon), timeProvider, null);
 
     }
 
@@ -79,8 +82,9 @@ public class AuthorizationServer {
         Set<String> scopes = new HashSet<>();
         scopes.add("r_temp");
         scopes.add("co2");
+        long resouceServerKnownExpiration = timeProvider.getCurrentTime() + howLongTokensLast;
         dbCon.addRS("rs1", supportedProfiles, scopes, auds, supportedKeyTypes, supportedTokenTypes, supportedCOSEParams,
-                resourceServerKnownExpiration, sharedKey, null);
+                resouceServerKnownExpiration, sharedKey, null);
 
         //String publicKeyStr = "piJYICg7PY0o/6Wf5ctUBBKnUPqN+jT22mm82mhADWecE0foI1ghAKQ7qn7SL/Jpm6YspJmTWbFG8GWpXE5GAXzSXrialK0pAyYBAiFYIBLW6MTSj4MRClfSUzc8rVLwG8RH5Ak1QfZDs4XhecEQIAE=";
         //OneKey acPublickey = new OneKey(CBORObject.DecodeFromBytes(Base64.getDecoder().decode(publicKeyStr)));
