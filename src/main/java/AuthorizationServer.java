@@ -28,7 +28,7 @@ public class AuthorizationServer {
     private static long howLongTokensLast = 1000000L;
 
     private final String userName = "aceuser";
-    private final String userPwd = "pwd";
+    private final String userPwd = "password";
     private final String rootPwd = "z5imVxzKw";
 
     private Set<String> supportedProfiles = new HashSet<>();
