@@ -68,29 +68,23 @@ public class AuthorizationServer {
     public void connectToDB() throws AceException, IOException, SQLException, CoseException  {
         dbCon = new CoapDBConnector(dbAdapter, PostgreSQLDBAdapter.DEFAULT_DB_URL, userName, userPwd);
 
-        // TODO: check if this asymetric key is actually needed if RPK is not used....
-        //OneKey asKey = OneKey.generateKey(AlgorithmID.ECDSA_256);
         coapServer = new CoapsAS("TestAS", dbCon,
                 KissPDP.getInstance("src/main/resources/acl.json", dbCon), timeProvider, null);
 
     }
 
-    public void storeClientsAndResourceServers() throws AceException
-    {
-        //OneKey key = OneKey.generateKey(AlgorithmID.ECDSA_256);
-        //OneKey rsPublicKey = key.PublicKey();
+    public void addResourceServer(String rsName, Set<String> scopes) throws AceException {
         Set<String> auds = new HashSet<>();
-        auds.add("rs1");
-        Set<String> scopes = new HashSet<>();
-        scopes.add("r_temp");
-        scopes.add("co2");
+        auds.add(rsName);
+
         long resouceServerKnownExpiration = timeProvider.getCurrentTime() + howLongTokensLast;
-        dbCon.addRS("rs1", supportedProfiles, scopes, auds, supportedKeyTypes, supportedTokenTypes, supportedCOSEParams,
+        dbCon.addRS(rsName, supportedProfiles, scopes, auds, supportedKeyTypes, supportedTokenTypes, supportedCOSEParams,
                 resouceServerKnownExpiration, sharedKey, null);
 
-        //String publicKeyStr = "piJYICg7PY0o/6Wf5ctUBBKnUPqN+jT22mm82mhADWecE0foI1ghAKQ7qn7SL/Jpm6YspJmTWbFG8GWpXE5GAXzSXrialK0pAyYBAiFYIBLW6MTSj4MRClfSUzc8rVLwG8RH5Ak1QfZDs4XhecEQIAE=";
-        //OneKey acPublickey = new OneKey(CBORObject.DecodeFromBytes(Base64.getDecoder().decode(publicKeyStr)));
-        dbCon.addClient("clientA", supportedProfiles, null, null, supportedKeyTypes, sharedKey,
+    }
+    public void addClient(String clientName) throws AceException
+    {
+        dbCon.addClient(clientName, supportedProfiles, null, null, supportedKeyTypes, sharedKey,
                 null);
     }
 
