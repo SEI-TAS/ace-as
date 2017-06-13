@@ -60,6 +60,7 @@ public class AuthorizationServer {
 
     public void createDB() throws AceException
     {
+        dbAdapter.wipeDB(rootPwd);
         dbAdapter.createUser(rootPwd);
         dbAdapter.createDBAndTables(rootPwd);
     }
