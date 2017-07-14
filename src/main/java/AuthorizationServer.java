@@ -1,5 +1,4 @@
 import COSE.*;
-import com.upokecenter.cbor.CBORObject;
 import se.sics.ace.AceException;
 import se.sics.ace.COSEparams;
 import se.sics.ace.TimeProvider;
@@ -20,16 +19,11 @@ import java.util.Set;
  * Created by Sebastian on 2017-05-09.
  */
 public class AuthorizationServer {
-    private static byte[] sharedKey256Bytes = {'a', 'b', 'c', 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
-            20, 21, 22, 23, 24, 25, 26, 27,28, 29, 30, 31, 32};
-    //private static byte[] sharedKey128Bytes = {'a', 'b', 'c', 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
-    private OneKey sharedKey;
+    private static long HOW_LONG_TOKENS_LAST = 1000000L;
+    private static String ACL_FILE_PATH = "src/main/resources/acl.json";
 
-    private static long howLongTokensLast = 1000000L;
-
-    private final String userName = "aceuser";
-    private final String userPwd = "password";
-    private final String rootPwd = "z5imVxzKw";
+    private static final String DB_USER = "aceuser";
+    private static final String DB_PASSWORD = "password";
 
     private Set<String> supportedProfiles = new HashSet<>();
     private Set<String> supportedKeyTypes = new HashSet<>();
@@ -47,18 +41,13 @@ public class AuthorizationServer {
         supportedTokenTypes.add(AccessTokenFactory.CWT_TYPE);
         supportedCOSEParams.add(new COSEparams(MessageTag.Encrypt0, AlgorithmID.AES_CCM_16_64_256, AlgorithmID.Direct));
 
-        CBORObject keyData = CBORObject.NewMap();
-        keyData.Add(KeyKeys.KeyType.AsCBOR(), KeyKeys.KeyType_Octet);
-        keyData.Add(KeyKeys.Octet_K.AsCBOR(), CBORObject.FromObject(sharedKey256Bytes));
-        sharedKey = new OneKey(keyData);
-
         timeProvider = new KissTime();
 
         dbAdapter = new PostgreSQLDBAdapter();
-        dbAdapter.setParams(userName, userPwd, DBConnector.dbName, null);
+        dbAdapter.setParams(DB_USER, DB_PASSWORD, DBConnector.dbName, null);
     }
 
-    public void createDB() throws AceException
+    public void createDB(String rootPwd) throws AceException
     {
         dbAdapter.wipeDB(rootPwd);
         dbAdapter.createUser(rootPwd);
@@ -66,25 +55,29 @@ public class AuthorizationServer {
     }
 
     public void connectToDB() throws AceException, IOException, SQLException, CoseException  {
-        dbCon = new CoapDBConnector(dbAdapter, PostgreSQLDBAdapter.DEFAULT_DB_URL, userName, userPwd);
+        dbCon = new CoapDBConnector(dbAdapter, PostgreSQLDBAdapter.DEFAULT_DB_URL, DB_USER, DB_PASSWORD);
 
-        coapServer = new CoapsAS("TestAS", dbCon,
-                KissPDP.getInstance("src/main/resources/acl.json", dbCon), timeProvider, null);
+        coapServer = new CoapsAS("AAIoT_AS", dbCon,
+                KissPDP.getInstance(ACL_FILE_PATH, dbCon), timeProvider, null);
 
     }
 
-    public void addResourceServer(String rsName, Set<String> scopes) throws AceException {
+    // This should be the result of the pairing procedure, adding a RS along with the shared key to use with it.
+    public void addResourceServer(String rsName, OneKey PSK, Set<String> scopes) throws AceException, COSE.CoseException {
         Set<String> auds = new HashSet<>();
         auds.add(rsName);
 
-        long resouceServerKnownExpiration = timeProvider.getCurrentTime() + howLongTokensLast;
+        long resouceServerKnownExpiration = timeProvider.getCurrentTime() + HOW_LONG_TOKENS_LAST;
+
         dbCon.addRS(rsName, supportedProfiles, scopes, auds, supportedKeyTypes, supportedTokenTypes, supportedCOSEParams,
-                resouceServerKnownExpiration, sharedKey, null);
+                resouceServerKnownExpiration, PSK, null);
 
     }
-    public void addClient(String clientName) throws AceException
+
+    // This should be the result of the pairing procedure, adding a client along with the shared key to use with it.
+    public void addClient(String clientName, OneKey PSK) throws AceException, COSE.CoseException
     {
-        dbCon.addClient(clientName, supportedProfiles, null, null, supportedKeyTypes, sharedKey,
+        dbCon.addClient(clientName, supportedProfiles, null, null, supportedKeyTypes, PSK,
                 null);
     }
 
