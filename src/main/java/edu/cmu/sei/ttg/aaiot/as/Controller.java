@@ -1,32 +1,66 @@
+package edu.cmu.sei.ttg.aaiot.as;
+
 import COSE.KeyKeys;
 import COSE.OneKey;
 import com.upokecenter.cbor.CBORObject;
+import edu.cmu.sei.ttg.aaiot.as.pairing.PairingManager;
 import se.sics.ace.AceException;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.sql.SQLException;
 import java.util.HashSet;
+import java.util.Scanner;
 import java.util.Set;
 
 /**
  * Created by sebastianecheverria on 7/18/17.
  */
 public class Controller {
-    public void run() throws COSE.CoseException, AceException, IOException, SQLException
+    private AuthorizationServer authorizationServer;
+    private String asId = "AAIoT_AS";
+
+    public void run() throws Exception
     {
         // TODO: load from somewhere.
         String rootPassword = "";
 
         // Create the server and its DB.
-        AuthorizationServer as = new AuthorizationServer();
-        as.createDB(rootPassword);
-        as.connectToDB();
+        authorizationServer = new AuthorizationServer(asId);
+        authorizationServer.createDB(rootPassword);
+        authorizationServer.connectToDB();
 
         // Start the server.
-        as.start();
+        authorizationServer.start();
 
-        pairWithRS(as);
-        pairWithClient(as);
+        pairWithRS(authorizationServer);
+
+        Scanner scanner = new Scanner(System.in);
+
+        while(true) {
+            System.out.println("");
+            System.out.println("Choose (p)air, (q)uit, or do nothing to keep server running: ");
+            char choice = scanner.next().charAt(0);
+
+            switch (choice) {
+                case 'p':
+                    pair();
+                    System.out.println("Paired!");
+                    break;
+                case 'q':
+                    System.exit(0);
+                default:
+                    System.out.println("Invalid command.");
+            }
+        }
+    }
+
+    private void pair() throws Exception
+    {
+        System.out.println("Started pairing");
+        PairingManager pairingManager = new PairingManager(authorizationServer);
+        pairingManager.pairClient(asId, InetAddress.getByName("localhost"), 9876);
+        System.out.println("Finished pairing");
     }
 
     private void pairWithRS(AuthorizationServer as) throws COSE.CoseException, AceException

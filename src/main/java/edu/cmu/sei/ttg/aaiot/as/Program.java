@@ -1,9 +1,4 @@
-import COSE.KeyKeys;
-import COSE.OneKey;
-import com.upokecenter.cbor.CBORObject;
-
-import java.util.HashSet;
-import java.util.Set;
+package edu.cmu.sei.ttg.aaiot.as;
 
 /**
  * Created by Sebastian on 2017-03-10.

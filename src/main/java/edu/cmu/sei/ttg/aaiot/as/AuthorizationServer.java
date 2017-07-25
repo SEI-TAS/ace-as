@@ -1,4 +1,8 @@
+package edu.cmu.sei.ttg.aaiot.as;
+
 import COSE.*;
+import com.upokecenter.cbor.CBORObject;
+import edu.cmu.sei.ttg.aaiot.as.pairing.ICredentialsStore;
 import se.sics.ace.AceException;
 import se.sics.ace.COSEparams;
 import se.sics.ace.TimeProvider;
@@ -18,12 +22,15 @@ import java.util.Set;
 /**
  * Created by Sebastian on 2017-05-09.
  */
-public class AuthorizationServer {
+public class AuthorizationServer implements ICredentialsStore
+{
     private static long HOW_LONG_TOKENS_LAST = 1000000L;
     private static String ACL_FILE_PATH = "src/main/resources/acl.json";
 
     private static final String DB_USER = "aceuser";
     private static final String DB_PASSWORD = "password";
+
+    private String asId;
 
     private Set<String> supportedProfiles = new HashSet<>();
     private Set<String> supportedKeyTypes = new HashSet<>();
@@ -35,7 +42,8 @@ public class AuthorizationServer {
     private CoapDBConnector dbCon;
     private TimeProvider timeProvider;
 
-    public AuthorizationServer() throws AceException, IOException, CoseException {
+    public AuthorizationServer(String asId) throws AceException, IOException, CoseException {
+        this.asId = asId;
         supportedProfiles.add("coap_dtls");
         supportedKeyTypes.add("PSK");
         supportedTokenTypes.add(AccessTokenFactory.CWT_TYPE);
@@ -57,7 +65,7 @@ public class AuthorizationServer {
     public void connectToDB() throws AceException, IOException, SQLException, CoseException  {
         dbCon = new CoapDBConnector(dbAdapter, PostgreSQLDBAdapter.DEFAULT_DB_URL, DB_USER, DB_PASSWORD);
 
-        coapServer = new CoapsAS("AAIoT_AS", dbCon,
+        coapServer = new CoapsAS(asId, dbCon,
                 KissPDP.getInstance(ACL_FILE_PATH, dbCon), timeProvider, null);
 
     }
@@ -81,9 +89,51 @@ public class AuthorizationServer {
                 null);
     }
 
+    @Override
+    public boolean storeClient(String id, byte[] psk)
+    {
+        try
+        {
+            System.out.println("Adding new client " + id);
+            addClient(id, createOneKeyFromBytes(psk));
+            return true;
+        }
+        catch (Exception ex)
+        {
+            System.out.println("Error storing client: " + ex.toString());
+            return false;
+        }
+    }
+
+    @Override
+    public boolean storeRS(String id, byte[] psk, Set<String> scopes)
+    {
+        try
+        {
+            System.out.println("Adding new RS " + id);
+            addResourceServer(id, createOneKeyFromBytes(psk), scopes);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            System.out.println("Error storing client: " + ex.toString());
+            return false;
+        }
+    }
+
     public void start()
     {
         System.out.println("Starting server");
         coapServer.start();
     }
+
+    private OneKey createOneKeyFromBytes(byte[] rawKey) throws COSE.CoseException
+    {
+        CBORObject keyData = CBORObject.NewMap();
+        keyData.Add(KeyKeys.KeyType.AsCBOR(), KeyKeys.KeyType_Octet);
+        keyData.Add(KeyKeys.Octet_K.AsCBOR(), CBORObject.FromObject(rawKey));
+        OneKey key = new OneKey(keyData);
+        return key;
+    }
+
 }
