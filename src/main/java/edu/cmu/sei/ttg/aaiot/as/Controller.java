@@ -9,8 +9,15 @@ import java.util.Scanner;
  * Created by sebastianecheverria on 7/18/17.
  */
 public class Controller {
+    private static final int CLIENT_PAIRING_PORT = 9876;
+    private static final int DEVICE_PAIRING_PORT = 9877;
+
+    private static final String CLIENT_IP = "localhost";
+    private static final String DEVICE_IP = "localhost";
+
     private AuthorizationServer authorizationServer;
     private String asId = "AAIoT_AS";
+
 
     public void run() throws Exception
     {
@@ -34,11 +41,11 @@ public class Controller {
 
             switch (choice) {
                 case 'c':
-                    pair(9876);
+                    pair(CLIENT_IP, CLIENT_PAIRING_PORT);
                     System.out.println("Paired!");
                     break;
                 case 'd':
-                    pair(9877);
+                    pair(DEVICE_IP, DEVICE_PAIRING_PORT);
                     System.out.println("Paired!");
                     break;
                 case 'q':
@@ -49,11 +56,11 @@ public class Controller {
         }
     }
 
-    private void pair(int port) throws Exception
+    private void pair(String server, int port) throws Exception
     {
         System.out.println("Started pairing");
         PairingManager pairingManager = new PairingManager(authorizationServer);
-        pairingManager.pairClient(asId, InetAddress.getByName("localhost"), port);
+        pairingManager.pairClient(asId, InetAddress.getByName(server), port);
         System.out.println("Finished pairing");
     }
 }
