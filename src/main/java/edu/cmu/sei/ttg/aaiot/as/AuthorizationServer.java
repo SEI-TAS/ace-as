@@ -94,6 +94,8 @@ public class AuthorizationServer implements ICredentialsStore
     {
         try
         {
+            System.out.println("Removing client if it was there.");
+            dbCon.deleteClient(id);
             System.out.println("Adding new client " + id);
             addClient(id, createOneKeyFromBytes(psk));
             return true;
@@ -110,6 +112,8 @@ public class AuthorizationServer implements ICredentialsStore
     {
         try
         {
+            System.out.println("Removing RS if it was there.");
+            dbCon.deleteRS(id);
             System.out.println("Adding new RS " + id);
             addResourceServer(id, createOneKeyFromBytes(psk), scopes);
             return true;
