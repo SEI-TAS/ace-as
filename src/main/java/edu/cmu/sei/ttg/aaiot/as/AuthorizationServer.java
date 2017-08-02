@@ -27,9 +27,6 @@ public class AuthorizationServer implements ICredentialsStore
     private static long HOW_LONG_TOKENS_LAST = 1000000L;
     private static String ACL_FILE_PATH = "src/main/resources/acl.json";
 
-    private static final String DB_USER = "aceuser";
-    private static final String DB_PASSWORD = "password";
-
     private String asId;
 
     private Set<String> supportedProfiles = new HashSet<>();
@@ -52,7 +49,7 @@ public class AuthorizationServer implements ICredentialsStore
         timeProvider = new KissTime();
 
         dbAdapter = new PostgreSQLDBAdapter();
-        dbAdapter.setParams(DB_USER, DB_PASSWORD, DBConnector.dbName, null);
+        dbAdapter.setParams(Config.data.get("db_user"), Config.data.get("db_pwd"), DBConnector.dbName, null);
     }
 
     public void createDB(String rootPwd) throws AceException
@@ -63,7 +60,7 @@ public class AuthorizationServer implements ICredentialsStore
     }
 
     public void connectToDB() throws AceException, IOException, SQLException, CoseException  {
-        dbCon = new CoapDBConnector(dbAdapter, PostgreSQLDBAdapter.DEFAULT_DB_URL, DB_USER, DB_PASSWORD);
+        dbCon = new CoapDBConnector(dbAdapter, PostgreSQLDBAdapter.DEFAULT_DB_URL, Config.data.get("db_user"), Config.data.get("db_pwd"));
 
         coapServer = new CoapsAS(asId, dbCon,
                 KissPDP.getInstance(ACL_FILE_PATH, dbCon), timeProvider, null);
