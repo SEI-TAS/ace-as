@@ -4,6 +4,7 @@ import edu.cmu.sei.ttg.aaiot.network.UDPClient;
 
 import javax.crypto.spec.SecretKeySpec;
 import java.net.InetAddress;
+import java.net.SocketTimeoutException;
 import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.HashSet;
@@ -41,7 +42,18 @@ public class PairingManager
 
         // Wait for reply. Format: a:c:<id> or a:i:<id>:<scope1>;<scope2>;...;<scopen>
         System.out.println("Waiting for pair reply at ");
-        String reply = udpClient.receiveData();
+
+        String reply;
+        try
+        {
+            reply = udpClient.receiveData();
+        }
+        catch(SocketTimeoutException ex)
+        {
+            System.out.println("Cancelling pairing, wait timeout exceeded.");
+            return;
+        }
+
         String[] parts = reply.split(separator);
         if(!parts[0].equals("a"))
         {
