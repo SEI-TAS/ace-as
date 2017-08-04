@@ -8,6 +8,6 @@
 *.pyc
 .idea/
 .gradle/
-ns3source/
+._.DS_Store
 out/
 /.DS_Store
