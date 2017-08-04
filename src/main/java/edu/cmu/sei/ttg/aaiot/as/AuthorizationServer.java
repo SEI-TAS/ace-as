@@ -25,7 +25,6 @@ import java.util.Set;
 public class AuthorizationServer implements ICredentialsStore
 {
     private static long HOW_LONG_TOKENS_LAST = 1000000L;
-    private static String ACL_FILE_PATH = "src/main/resources/acl.json";
 
     private String asId;
 
@@ -59,11 +58,11 @@ public class AuthorizationServer implements ICredentialsStore
         dbAdapter.createDBAndTables(rootPwd);
     }
 
-    public void connectToDB() throws AceException, IOException, SQLException, CoseException  {
+    public void connectToDB(String aclFilePath) throws AceException, IOException, SQLException, CoseException  {
         dbCon = new CoapDBConnector(dbAdapter, PostgreSQLDBAdapter.DEFAULT_DB_URL, Config.data.get("db_user"), Config.data.get("db_pwd"));
 
         coapServer = new CoapsAS(asId, dbCon,
-                KissPDP.getInstance(ACL_FILE_PATH, dbCon), timeProvider, null);
+                KissPDP.getInstance(aclFilePath, dbCon), timeProvider, null);
 
     }
 

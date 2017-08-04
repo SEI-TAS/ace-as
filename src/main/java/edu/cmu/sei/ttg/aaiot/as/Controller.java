@@ -9,7 +9,7 @@ import java.util.Scanner;
  * Created by sebastianecheverria on 7/18/17.
  */
 public class Controller {
-    private static final String CONFIG_FILE = "src/main/resources/config.json";
+    private static final String CONFIG_FILE = "config.json";
     private static final int CLIENT_PAIRING_PORT = 9876;
     private static final int DEVICE_PAIRING_PORT = 9877;
 
@@ -28,7 +28,7 @@ public class Controller {
         String asId = Config.data.get("id");
         authorizationServer = new AuthorizationServer(asId);
         authorizationServer.createDB(rootPassword);
-        authorizationServer.connectToDB();
+        authorizationServer.connectToDB(Config.data.get("acl_path"));
 
         // Start the server.
         authorizationServer.start();

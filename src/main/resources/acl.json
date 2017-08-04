@@ -3,7 +3,7 @@
   ["rs1"],
   {
     "clientA" : {
-      "rs1" : ["r_temp"]
+      "rs1" : ["r_temp", "r_light"]
     }
   }
 ]
