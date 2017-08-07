@@ -18,6 +18,7 @@ import se.sics.ace.examples.PostgreSQLDBAdapter;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -65,7 +66,26 @@ public class AuthorizationServer implements ICredentialsStore
 
         this.pdp = new InMemoryPDP(dbCon);
         coapServer = new CoapsAS(asId, dbCon, pdp, timeProvider, null);
+    }
 
+    public Set<String> getClients()
+    {
+        return pdp.getClients();
+    }
+
+    public Map<String, Set<String>> getRules(String clientId)
+    {
+        return pdp.getRules(clientId);
+    }
+
+    public void addRule(String clientId, String rsId, String scope)
+    {
+        pdp.addRule(clientId, rsId, scope);
+    }
+
+    public void removeRule(String clientId, String rsId, String scope)
+    {
+        pdp.removeRule(clientId, rsId, scope);
     }
 
     // This should be the result of the pairing procedure, adding a RS along with the shared key to use with it.

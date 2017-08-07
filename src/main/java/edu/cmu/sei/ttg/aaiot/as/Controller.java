@@ -3,7 +3,9 @@ package edu.cmu.sei.ttg.aaiot.as;
 import edu.cmu.sei.ttg.aaiot.as.pairing.PairingManager;
 
 import java.net.InetAddress;
+import java.util.Map;
 import java.util.Scanner;
+import java.util.Set;
 
 /**
  * Created by sebastianecheverria on 7/18/17.
@@ -37,7 +39,7 @@ public class Controller {
 
         while(true) {
             System.out.println("");
-            System.out.println("Choose (c) pair client, (d) pair device, (q)uit, or do nothing to keep server running: ");
+            System.out.println("Choose (c) pair client, (d) pair device, (r) handle rules, (q)uit, or do nothing to keep server running: ");
             char choice = scanner.next().charAt(0);
 
             switch (choice) {
@@ -65,6 +67,9 @@ public class Controller {
                     pair(device_ip, DEVICE_PAIRING_PORT);
                     System.out.println("Finished pairing procedure!");
                     break;
+                case 'r':
+                    manageRules();
+                    break;
                 case 'q':
                     System.exit(0);
                 default:
@@ -80,5 +85,68 @@ public class Controller {
         String asId = Config.data.get("id");
         pairingManager.pairClient(asId, InetAddress.getByName(server), port);
         System.out.println("Finished pairing");
+    }
+
+    private void manageRules()
+    {
+        Scanner scanner = new Scanner(System.in);
+
+        boolean validClientSelected = false;
+        String selectedClient = "";
+        while(!validClientSelected)
+        {
+            System.out.println("");
+            System.out.println("Input the name of the client that you want to manage rules for. The following are the valid paired clients: ");
+            for (String client : authorizationServer.getClients())
+            {
+                System.out.println(client);
+            }
+            selectedClient = scanner.nextLine();
+
+            if(authorizationServer.getClients().contains(selectedClient))
+            {
+                validClientSelected = true;
+            }
+            else
+            {
+                System.out.println("Invalid client.");
+            }
+        }
+
+        while(true)
+        {
+            System.out.println("");
+            System.out.println("Input the 'add' or 'remove' followed by the resource server name and scope (i.e., add rs1 read). The following are the current rules: ");
+            Map<String, Set<String>> currentClientRules = authorizationServer.getRules(selectedClient);
+            if(currentClientRules != null)
+            {
+                for (String rs : currentClientRules.keySet())
+                {
+                    System.out.print("RS " + rs + ": ");
+                    for (String scope : authorizationServer.getRules(selectedClient).get(rs))
+                    {
+                        System.out.println(scope + " ");
+                    }
+                }
+            }
+
+            String command = scanner.nextLine();
+            String[] parts = command.split(" ");
+            if (parts[0].equals("add"))
+            {
+                authorizationServer.addRule(selectedClient, parts[1], parts[2]);
+                break;
+            }
+            else if (parts[0].equals("remove"))
+            {
+                authorizationServer.removeRule(selectedClient, parts[1], parts[2]);
+                break;
+            }
+            else
+            {
+                System.out.println("Invalid command.");
+                break;
+            }
+        }
     }
 }

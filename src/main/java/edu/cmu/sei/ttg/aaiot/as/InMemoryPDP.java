@@ -162,4 +162,19 @@ public class InMemoryPDP implements PDP, AutoCloseable {
             scopes.add(scope);
         }
     }
+
+    public void removeRule(String clientId, String rsId, String scope)
+    {
+        acl.get(clientId).get(rsId).remove(scope);
+    }
+
+    public Set<String> getClients()
+    {
+        return clients;
+    }
+
+    public Map<String, Set<String>> getRules(String clientId)
+    {
+        return acl.get(clientId);
+    }
 }
