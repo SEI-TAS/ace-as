@@ -8,10 +8,8 @@ import se.sics.ace.COSEparams;
 import se.sics.ace.TimeProvider;
 import se.sics.ace.as.AccessTokenFactory;
 import se.sics.ace.as.DBConnector;
-import se.sics.ace.as.PDP;
 import se.sics.ace.coap.as.CoapDBConnector;
 import se.sics.ace.coap.as.CoapsAS;
-import se.sics.ace.examples.KissPDP;
 import se.sics.ace.examples.KissTime;
 import se.sics.ace.examples.PostgreSQLDBAdapter;
 
@@ -39,7 +37,9 @@ public class AuthorizationServer implements ICredentialsStore
     private CoapsAS coapServer;
     private CoapDBConnector dbCon;
     private TimeProvider timeProvider;
-    private InMemoryPDP pdp;
+    private SerializablePDP pdp;
+
+    private String aclFilePath;
 
     public AuthorizationServer(String asId) throws AceException, IOException, CoseException {
         this.asId = asId;
@@ -64,7 +64,9 @@ public class AuthorizationServer implements ICredentialsStore
     public void connectToDB(String aclFilePath) throws AceException, IOException, SQLException, CoseException  {
         dbCon = new CoapDBConnector(dbAdapter, PostgreSQLDBAdapter.DEFAULT_DB_URL, Config.data.get("db_user"), Config.data.get("db_pwd"));
 
-        this.pdp = new InMemoryPDP(dbCon);
+        this.aclFilePath = aclFilePath;
+        this.pdp = new SerializablePDP(dbCon);
+        this.pdp.loadFromFile(aclFilePath);
         coapServer = new CoapsAS(asId, dbCon, pdp, timeProvider, null);
     }
 
@@ -78,14 +80,16 @@ public class AuthorizationServer implements ICredentialsStore
         return pdp.getRules(clientId);
     }
 
-    public void addRule(String clientId, String rsId, String scope)
+    public void addRule(String clientId, String rsId, String scope) throws IOException
     {
         pdp.addRule(clientId, rsId, scope);
+        pdp.saveToFile(aclFilePath);
     }
 
-    public void removeRule(String clientId, String rsId, String scope)
+    public void removeRule(String clientId, String rsId, String scope) throws IOException
     {
         pdp.removeRule(clientId, rsId, scope);
+        pdp.saveToFile(aclFilePath);
     }
 
     // This should be the result of the pairing procedure, adding a RS along with the shared key to use with it.
@@ -98,7 +102,15 @@ public class AuthorizationServer implements ICredentialsStore
         dbCon.addRS(rsName, supportedProfiles, scopes, auds, supportedKeyTypes, supportedTokenTypes, supportedCOSEParams,
                 resouceServerKnownExpiration, PSK, null);
 
+        // Authorize RS to introspect.
         pdp.addRS(rsName);
+        try {
+            pdp.saveToFile(aclFilePath);
+        }
+        catch(IOException ex)
+        {
+            throw new AceException(ex.toString());
+        }
     }
 
     // This should be the result of the pairing procedure, adding a client along with the shared key to use with it.
@@ -106,7 +118,16 @@ public class AuthorizationServer implements ICredentialsStore
     {
         dbCon.addClient(clientName, supportedProfiles, null, null, supportedKeyTypes, PSK,
                 null);
+
+        // Authorize new client to ask for tokens.
         pdp.addClient(clientName);
+        try {
+            pdp.saveToFile(aclFilePath);
+        }
+        catch(IOException ex)
+        {
+            throw new AceException(ex.toString());
+        }
     }
 
     @Override

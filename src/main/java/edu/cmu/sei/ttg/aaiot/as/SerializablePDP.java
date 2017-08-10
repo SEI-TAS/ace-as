@@ -1,16 +1,21 @@
 package edu.cmu.sei.ttg.aaiot.as;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.json.JSONTokener;
 import se.sics.ace.AceException;
 import se.sics.ace.as.DBConnector;
 import se.sics.ace.as.PDP;
 
+import java.io.FileInputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
 
 /**
  * Created by Sebastian on 2017-08-04.
  */
-public class InMemoryPDP implements PDP, AutoCloseable {
+public class SerializablePDP implements PDP, AutoCloseable {
 
     private DBConnector db = null;
 
@@ -40,7 +45,7 @@ public class InMemoryPDP implements PDP, AutoCloseable {
      * @throws AceException
      * @throws IOException
      */
-    public InMemoryPDP(DBConnector db) throws AceException, IOException
+    public SerializablePDP(DBConnector db) throws AceException, IOException
     {
         this.db = db;
     }
@@ -176,5 +181,117 @@ public class InMemoryPDP implements PDP, AutoCloseable {
     public Map<String, Set<String>> getRules(String clientId)
     {
         return acl.get(clientId);
+    }
+
+    public void loadFromFile(String configurationFile) throws AceException, IOException
+    {
+        FileInputStream fs;
+        try {
+            fs = new FileInputStream(configurationFile);
+        }
+        catch(IOException ex)
+        {
+            System.out.println("ACL file " + configurationFile + " not found, will be created.");
+            return;
+        }
+
+        JSONTokener parser = new JSONTokener(fs);
+        JSONArray config = new JSONArray(parser);
+
+        //Parse the clients allowed to access this AS
+        if (!(config.get(0) instanceof JSONArray)) {
+            fs.close();
+            throw new AceException("Invalid PDP configuration");
+        }
+        JSONArray clientsJ = (JSONArray)config.get(0);
+        clients = new HashSet<>();
+        Iterator<Object> it = clientsJ.iterator();
+        while (it.hasNext()) {
+            Object next = it.next();
+            if (next instanceof String) {
+                clients.add((String)next);
+            } else {
+                fs.close();
+                throw new AceException("Invalid PDP configuration");
+            }
+        }
+
+        //Parse the RS allowed to access this AS
+        if (!(config.get(1) instanceof JSONArray)) {
+            fs.close();
+            throw new AceException("Invalid PDP configuration");
+        }
+        JSONArray rsJ = (JSONArray)config.get(1);
+        resourceServers = new HashSet<>();
+        it = rsJ.iterator();
+        while (it.hasNext()) {
+            Object next = it.next();
+            if (next instanceof String) {
+                resourceServers.add((String)next);
+            } else {
+                fs.close();
+                throw new AceException("Invalid PDP configuration");
+            }
+        }
+
+        //Read the acl
+        if (!(config.get(2) instanceof JSONObject)) {
+            fs.close();
+            throw new AceException("Invalid PDP configuration");
+        }
+        JSONObject aclJ = (JSONObject)config.get(2);
+        acl = new HashMap<>();
+        Iterator<String> clientACL = aclJ.keys();
+        //Iterate through the client_ids
+        while(clientACL.hasNext()) {
+            String client = clientACL.next();
+            if (!(aclJ.get(client) instanceof JSONObject)) {
+                fs.close();
+                throw new AceException("Invalid PDP configuration");
+            }
+            Map<String, Set<String>> audM = new HashMap<>();
+            JSONObject audJ = (JSONObject) aclJ.get(client);
+            Iterator<String> audACL = audJ.keys();
+            //Iterate through the audiences
+            while(audACL.hasNext()) {
+                String aud = audACL.next();
+                if (!(audJ.get(aud) instanceof JSONArray)) {
+                    fs.close();
+                    throw new AceException("Invalid PDP configuration");
+                }
+                Set<String> scopeS = new HashSet<>();
+                JSONArray scopes = (JSONArray)audJ.get(aud);
+                Iterator<Object> scopeI = scopes.iterator();
+                //Iterate through the scopes
+                while (scopeI.hasNext()) {
+                    Object scope = scopeI.next();
+                    if (!(scope instanceof String)) {
+                        fs.close();
+                        throw new AceException("Invalid PDP configuration");
+                    }
+                    scopeS.add((String)scope);
+                }
+                audM.put(aud, scopeS);
+            }
+            acl.put(client, audM);
+        }
+        fs.close();
+    }
+
+    public void saveToFile(String filePath) throws IOException
+    {
+        JSONArray clientsArray = new JSONArray(clients);
+        JSONArray rsArray = new JSONArray(resourceServers);
+        JSONObject aclObject = new JSONObject(acl);
+
+        JSONArray mainArray = new JSONArray();
+        mainArray.put(clientsArray);
+        mainArray.put(rsArray);
+        mainArray.put(aclObject);
+
+        FileWriter file = new FileWriter(filePath, false);
+        file.write(mainArray.toString());
+        file.flush();
+        file.close();
     }
 }

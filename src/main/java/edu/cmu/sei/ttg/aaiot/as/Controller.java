@@ -2,6 +2,7 @@ package edu.cmu.sei.ttg.aaiot.as;
 
 import edu.cmu.sei.ttg.aaiot.as.pairing.PairingManager;
 
+import java.io.IOException;
 import java.net.InetAddress;
 import java.util.Map;
 import java.util.Scanner;
@@ -87,7 +88,7 @@ public class Controller {
         System.out.println("Finished pairing");
     }
 
-    private void manageRules()
+    private void manageRules() throws IOException
     {
         Scanner scanner = new Scanner(System.in);
 
