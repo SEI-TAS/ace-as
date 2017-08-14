@@ -40,42 +40,51 @@ public class Controller {
         Scanner scanner = new Scanner(System.in);
 
         while(true) {
-            System.out.println("");
-            System.out.println("Choose (c) pair client, (d) pair device, (r) handle rules, (q)uit, or do nothing to keep server running: ");
-            char choice = scanner.next().charAt(0);
+            try
+            {
+                System.out.println("");
+                System.out.println("Choose (c) pair client, (d) pair device, (r) handle rules, (q)uit, or do nothing to keep server running: ");
+                char choice = scanner.next().charAt(0);
 
-            switch (choice) {
-                case 'c':
-                    System.out.println("");
-                    System.out.println("Input client's IP, or (d) to use default (" + DEFAULT_CLIENT_IP + "): ");
-                    String ip = scanner.next();
-                    if(ip.equals("d"))
-                    {
-                        ip = DEFAULT_CLIENT_IP;
-                    }
+                switch (choice)
+                {
+                    case 'c':
+                        System.out.println("");
+                        System.out.println("Input client's IP, or (d) to use default (" + DEFAULT_CLIENT_IP + "): ");
+                        String ip = scanner.next();
+                        if (ip.equals("d"))
+                        {
+                            ip = DEFAULT_CLIENT_IP;
+                        }
 
-                    pair(ip, CLIENT_PAIRING_PORT);
-                    System.out.println("Finished pairing procedure!");
-                    break;
-                case 'd':
-                    System.out.println("");
-                    System.out.println("Input devices's IP, or (d) to use default (" + DEFAULT_DEVICE_IP + "): ");
-                    String device_ip = scanner.next();
-                    if(device_ip.equals("d"))
-                    {
-                        device_ip = DEFAULT_DEVICE_IP;
-                    }
+                        pair(ip, CLIENT_PAIRING_PORT);
+                        System.out.println("Finished pairing procedure!");
+                        break;
+                    case 'd':
+                        System.out.println("");
+                        System.out.println("Input devices's IP, or (d) to use default (" + DEFAULT_DEVICE_IP + "): ");
+                        String device_ip = scanner.next();
+                        if (device_ip.equals("d"))
+                        {
+                            device_ip = DEFAULT_DEVICE_IP;
+                        }
 
-                    pair(device_ip, DEVICE_PAIRING_PORT);
-                    System.out.println("Finished pairing procedure!");
-                    break;
-                case 'r':
-                    manageRules();
-                    break;
-                case 'q':
-                    System.exit(0);
-                default:
-                    System.out.println("Invalid command.");
+                        pair(device_ip, DEVICE_PAIRING_PORT);
+                        System.out.println("Finished pairing procedure!");
+                        break;
+                    case 'r':
+                        manageRules();
+                        break;
+                    case 'q':
+                        authorizationServer.stop();
+                        System.exit(0);
+                    default:
+                        System.out.println("Invalid command.");
+                }
+            }
+            catch(Exception ex)
+            {
+                System.out.println("Error processing command: " + ex.toString());
             }
         }
     }

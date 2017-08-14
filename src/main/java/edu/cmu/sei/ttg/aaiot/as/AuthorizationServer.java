@@ -35,7 +35,7 @@ public class AuthorizationServer implements ICredentialsStore
     private Set<COSEparams> supportedCOSEParams = new HashSet<>();
 
     private PostgreSQLDBAdapter dbAdapter;
-    private CoapsAS coapServer;
+    private CoapsAS coapServer = null;
     private CoapDBConnector dbCon;
     private TimeProvider timeProvider;
     private SerializablePDP pdp;
@@ -66,8 +66,8 @@ public class AuthorizationServer implements ICredentialsStore
         dbCon = new CoapDBConnector(dbAdapter, PostgreSQLDBAdapter.DEFAULT_DB_URL, Config.data.get("db_user"), Config.data.get("db_pwd"));
 
         this.aclFilePath = aclFilePath;
-        this.pdp = new SerializablePDP(dbCon);
-        this.pdp.loadFromFile(aclFilePath);
+        this.pdp = new SerializablePDP(dbCon, aclFilePath);
+        this.pdp.loadFromFile();
         coapServer = new CoapsAS(asId, dbCon, pdp, timeProvider, null);
     }
 
@@ -84,13 +84,13 @@ public class AuthorizationServer implements ICredentialsStore
     public void addRule(String clientId, String rsId, String scope) throws IOException
     {
         pdp.addRule(clientId, rsId, scope);
-        pdp.saveToFile(aclFilePath);
+        pdp.saveToFile();
     }
 
     public void removeRule(String clientId, String rsId, String scope) throws IOException
     {
         pdp.removeRule(clientId, rsId, scope);
-        pdp.saveToFile(aclFilePath);
+        pdp.saveToFile();
     }
 
     // This should be the result of the pairing procedure, adding a RS along with the shared key to use with it.
@@ -106,7 +106,7 @@ public class AuthorizationServer implements ICredentialsStore
         // Authorize RS to introspect.
         pdp.addRS(rsName);
         try {
-            pdp.saveToFile(aclFilePath);
+            pdp.saveToFile();
         }
         catch(IOException ex)
         {
@@ -123,7 +123,7 @@ public class AuthorizationServer implements ICredentialsStore
         // Authorize new client to ask for tokens.
         pdp.addClient(clientName);
         try {
-            pdp.saveToFile(aclFilePath);
+            pdp.saveToFile();
         }
         catch(IOException ex)
         {
@@ -169,8 +169,25 @@ public class AuthorizationServer implements ICredentialsStore
 
     public void start()
     {
-        System.out.println("Starting server");
-        coapServer.start();
+        if(coapServer != null)
+        {
+            System.out.println("Starting server");
+            coapServer.start();
+        }
+    }
+
+    public void stop() throws Exception
+    {
+        if(coapServer != null)
+        {
+            coapServer.close();
+        }
+    }
+
+    public void wipeData(String rootPwd) throws IOException, AceException
+    {
+        this.dbAdapter.wipeDB(rootPwd);
+        this.pdp.wipe();
     }
 
     private OneKey createOneKeyFromBytes(byte[] rawKey) throws COSE.CoseException

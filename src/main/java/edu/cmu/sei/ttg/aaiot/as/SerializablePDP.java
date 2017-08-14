@@ -39,15 +39,18 @@ public class SerializablePDP implements PDP, AutoCloseable {
      */
     private Map<String, Map<String, Set<String>>> acl = new HashMap<>();
 
+    private String aclFile;
+
     /**
      * @param db  the database connector
      * @return  the PDP
      * @throws AceException
      * @throws IOException
      */
-    public SerializablePDP(DBConnector db) throws AceException, IOException
+    public SerializablePDP(DBConnector db, String aclFile) throws AceException, IOException
     {
         this.db = db;
+        this.aclFile = aclFile;
     }
 
     @Override
@@ -183,15 +186,15 @@ public class SerializablePDP implements PDP, AutoCloseable {
         return acl.get(clientId);
     }
 
-    public void loadFromFile(String configurationFile) throws AceException, IOException
+    public void loadFromFile() throws AceException, IOException
     {
         FileInputStream fs;
         try {
-            fs = new FileInputStream(configurationFile);
+            fs = new FileInputStream(aclFile);
         }
         catch(IOException ex)
         {
-            System.out.println("ACL file " + configurationFile + " not found, will be created.");
+            System.out.println("ACL file " + aclFile + " not found, will be created.");
             return;
         }
 
@@ -278,7 +281,7 @@ public class SerializablePDP implements PDP, AutoCloseable {
         fs.close();
     }
 
-    public void saveToFile(String filePath) throws IOException
+    public void saveToFile() throws IOException
     {
         JSONArray clientsArray = new JSONArray(clients);
         JSONArray rsArray = new JSONArray(resourceServers);
@@ -289,9 +292,17 @@ public class SerializablePDP implements PDP, AutoCloseable {
         mainArray.put(rsArray);
         mainArray.put(aclObject);
 
-        FileWriter file = new FileWriter(filePath, false);
+        FileWriter file = new FileWriter(aclFile, false);
         file.write(mainArray.toString());
         file.flush();
         file.close();
+    }
+
+    public void wipe() throws IOException
+    {
+        clients.clear();
+        resourceServers.clear();
+        acl.clear();
+        saveToFile();
     }
 }
