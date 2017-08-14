@@ -1,6 +1,7 @@
 package edu.cmu.sei.ttg.aaiot.as;
 
 import edu.cmu.sei.ttg.aaiot.as.pairing.PairingManager;
+import edu.cmu.sei.ttg.aaiot.config.Config;
 
 import java.io.IOException;
 import java.net.InetAddress;

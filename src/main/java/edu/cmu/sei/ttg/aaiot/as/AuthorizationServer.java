@@ -3,6 +3,7 @@ package edu.cmu.sei.ttg.aaiot.as;
 import COSE.*;
 import com.upokecenter.cbor.CBORObject;
 import edu.cmu.sei.ttg.aaiot.as.pairing.ICredentialsStore;
+import edu.cmu.sei.ttg.aaiot.config.Config;
 import se.sics.ace.AceException;
 import se.sics.ace.COSEparams;
 import se.sics.ace.TimeProvider;
@@ -56,7 +57,7 @@ public class AuthorizationServer implements ICredentialsStore
 
     public void createDB(String rootPwd) throws AceException
     {
-        dbAdapter.wipeDB(rootPwd);
+        //dbAdapter.wipeDB(rootPwd);
         dbAdapter.createUser(rootPwd);
         dbAdapter.createDBAndTables(rootPwd);
     }
