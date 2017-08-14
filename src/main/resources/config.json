@@ -1,6 +1,6 @@
 {
   "id" : "AAIoT_AS",
-  "root_db_pwd": "z5imVxzKw",
+  "root_db_pwd": "",
   "db_user": "aceuser",
   "db_pwd": "password",
   "acl_path": "test_acl.json"
