@@ -44,15 +44,15 @@ public class Controller {
             {
                 System.out.println("");
                 System.out.println("Choose (c) pair client, (d) pair device, (r) handle rules, (q)uit, or do nothing to keep server running: ");
-                char choice = scanner.next().charAt(0);
+                char choice = scanner.nextLine().charAt(0);
 
                 switch (choice)
                 {
                     case 'c':
                         System.out.println("");
-                        System.out.println("Input client's IP, or (d) to use default (" + DEFAULT_CLIENT_IP + "): ");
-                        String ip = scanner.next();
-                        if (ip.equals("d"))
+                        System.out.println("Input client's IP, or (Enter) to use default (" + DEFAULT_CLIENT_IP + "): ");
+                        String ip = scanner.nextLine();
+                        if (ip.equals(""))
                         {
                             ip = DEFAULT_CLIENT_IP;
                         }
@@ -62,9 +62,9 @@ public class Controller {
                         break;
                     case 'd':
                         System.out.println("");
-                        System.out.println("Input devices's IP, or (d) to use default (" + DEFAULT_DEVICE_IP + "): ");
-                        String device_ip = scanner.next();
-                        if (device_ip.equals("d"))
+                        System.out.println("Input devices's IP, or (Enter) to use default (" + DEFAULT_DEVICE_IP + "): ");
+                        String device_ip = scanner.nextLine();
+                        if (device_ip.equals(""))
                         {
                             device_ip = DEFAULT_DEVICE_IP;
                         }
