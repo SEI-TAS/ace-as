@@ -25,7 +25,7 @@ public class PairingManager
         this.credentialsStore = credentialsStore;
     }
 
-    public void pairClient(String asID, InetAddress deviceIp, int devicePort) throws Exception
+    public void pair(String asID, InetAddress deviceIp, int devicePort) throws Exception
     {
         UDPClient udpClient = new UDPClient(deviceIp, devicePort);
 

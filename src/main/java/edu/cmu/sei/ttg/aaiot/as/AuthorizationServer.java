@@ -77,6 +77,11 @@ public class AuthorizationServer implements ICredentialsStore
         return pdp.getClients();
     }
 
+    public Set<String> getResourceServers()
+    {
+        return pdp.getResourceServers();
+    }
+
     public Map<String, Set<String>> getRules(String clientId)
     {
         return pdp.getRules(clientId);
@@ -115,6 +120,14 @@ public class AuthorizationServer implements ICredentialsStore
         }
     }
 
+    public void removeResourceServer(String rsName) throws AceException, IOException
+    {
+        System.out.println("Removing resource server if it was there.");
+        dbCon.deleteRS(rsName);
+        pdp.removeRS(rsName);
+        pdp.saveToFile();
+    }
+
     // This should be the result of the pairing procedure, adding a client along with the shared key to use with it.
     public void addClient(String clientName, OneKey PSK) throws AceException, COSE.CoseException
     {
@@ -132,13 +145,20 @@ public class AuthorizationServer implements ICredentialsStore
         }
     }
 
+    public void removeClient(String clientName) throws AceException, IOException
+    {
+        System.out.println("Removing client if it was there.");
+        dbCon.deleteClient(clientName);
+        pdp.removeClient(clientName);
+        pdp.saveToFile();
+    }
+
     @Override
     public boolean storeClient(String id, byte[] psk)
     {
         try
         {
-            System.out.println("Removing client if it was there.");
-            dbCon.deleteClient(id);
+            removeClient(id);
             System.out.println("Adding new client " + id);
             addClient(id, createOneKeyFromBytes(psk));
             return true;
@@ -155,15 +175,14 @@ public class AuthorizationServer implements ICredentialsStore
     {
         try
         {
-            System.out.println("Removing RS if it was there.");
-            dbCon.deleteRS(id);
+            removeResourceServer(id);
             System.out.println("Adding new RS " + id);
             addResourceServer(id, createOneKeyFromBytes(psk), scopes);
             return true;
         }
         catch (Exception ex)
         {
-            System.out.println("Error storing client: " + ex.toString());
+            System.out.println("Error storing RS: " + ex.toString());
             return false;
         }
     }

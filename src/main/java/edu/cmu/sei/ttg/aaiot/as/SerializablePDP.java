@@ -133,11 +133,41 @@ public class SerializablePDP implements PDP, AutoCloseable {
         }
     }
 
+    public void removeClient(String clientId)
+    {
+        if(clients.contains(clientId))
+        {
+            clients.remove(clientId);
+        }
+
+        if(acl.containsKey(clientId))
+        {
+            acl.remove(clientId);
+        }
+    }
+
     public void addRS(String rsId)
     {
         if(!resourceServers.contains(rsId))
         {
             resourceServers.add(rsId);
+        }
+    }
+
+    public void removeRS(String rsId)
+    {
+        if(resourceServers.contains(rsId))
+        {
+            resourceServers.remove(rsId);
+        }
+
+        for(String clientId : acl.keySet())
+        {
+            Map<String, Set<String>> rss = acl.get(clientId);
+            if(rss.containsKey(rsId))
+            {
+                rss.remove(rsId);
+            }
         }
     }
 
@@ -179,6 +209,11 @@ public class SerializablePDP implements PDP, AutoCloseable {
     public Set<String> getClients()
     {
         return clients;
+    }
+
+    public Set<String> getResourceServers()
+    {
+        return resourceServers;
     }
 
     public Map<String, Set<String>> getRules(String clientId)

@@ -2,6 +2,7 @@ package edu.cmu.sei.ttg.aaiot.as;
 
 import edu.cmu.sei.ttg.aaiot.as.pairing.PairingManager;
 import edu.cmu.sei.ttg.aaiot.config.Config;
+import se.sics.ace.AceException;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -43,7 +44,14 @@ public class Controller {
             try
             {
                 System.out.println("");
-                System.out.println("Choose (c) pair client, (d) pair device, (r) handle rules, (q)uit, or do nothing to keep server running: ");
+                System.out.println("Server running ");
+                System.out.println("(c) pair client");
+                System.out.println("(d) pair device");
+                System.out.println("(h) handle rules");
+                System.out.println("(l) list paired clients and devices");
+                System.out.println("(r) remove a paired client");
+                System.out.println("(e) remove a paired device");
+                System.out.println("(q)uit");
                 char choice = scanner.nextLine().charAt(0);
 
                 switch (choice)
@@ -72,8 +80,23 @@ public class Controller {
                         pair(device_ip, DEVICE_PAIRING_PORT);
                         System.out.println("Finished pairing procedure!");
                         break;
-                    case 'r':
+                    case 'h':
                         manageRules();
+                        break;
+                    case 'l':
+                        listPairedClientsAndDevices();
+                        break;
+                    case 'r':
+                        System.out.println("");
+                        System.out.println("Input client's name/id ");
+                        String clientName = scanner.nextLine();
+                        removePairedClient(clientName);
+                        break;
+                    case 'e':
+                        System.out.println("");
+                        System.out.println("Input RS's name/id ");
+                        String rsName = scanner.nextLine();
+                        removePairedRS(rsName);
                         break;
                     case 'q':
                         authorizationServer.stop();
@@ -94,7 +117,7 @@ public class Controller {
         System.out.println("Started pairing");
         PairingManager pairingManager = new PairingManager(authorizationServer);
         String asId = Config.data.get("id");
-        pairingManager.pairClient(asId, InetAddress.getByName(server), port);
+        pairingManager.pair(asId, InetAddress.getByName(server), port);
         System.out.println("Finished pairing");
     }
 
@@ -159,5 +182,32 @@ public class Controller {
                 break;
             }
         }
+    }
+
+    public void listPairedClientsAndDevices()
+    {
+        System.out.println("");
+        System.out.println("Paired clients: ");
+        for(String clientName : authorizationServer.getClients())
+        {
+            System.out.println("  " + clientName);
+        }
+
+        System.out.println("");
+        System.out.println("Paired devices: ");
+        for(String resourceServer : authorizationServer.getResourceServers())
+        {
+            System.out.println("  " + resourceServer);
+        }
+    }
+
+    public void removePairedClient(String clientName) throws AceException, IOException
+    {
+        authorizationServer.removeClient(clientName);
+    }
+
+    public void removePairedRS(String rsName) throws AceException, IOException
+    {
+        authorizationServer.removeResourceServer(rsName);
     }
 }
