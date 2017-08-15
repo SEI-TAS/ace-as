@@ -3,5 +3,6 @@
   "root_db_pwd": "",
   "db_user": "aceuser",
   "db_pwd": "password",
-  "acl_path": "test_acl.json"
+  "acl_path": "test_acl.json",
+  "token_duration_in_mins": "10"
 }

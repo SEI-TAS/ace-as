@@ -25,9 +25,8 @@ import java.util.Set;
  */
 public class AuthorizationServer implements ICredentialsStore
 {
-    private static long HOW_LONG_TOKENS_LAST = 1000000L;
-
     private String asId;
+    private long tokenDurationInMs;
 
     private Set<String> supportedProfiles = new HashSet<>();
     private Set<String> supportedKeyTypes = new HashSet<>();
@@ -53,6 +52,8 @@ public class AuthorizationServer implements ICredentialsStore
 
         dbAdapter = new PostgreSQLDBAdapter();
         dbAdapter.setParams(Config.data.get("db_user"), Config.data.get("db_pwd"), DBConnector.dbName, null);
+
+        tokenDurationInMs = Long.parseLong(Config.data.get("token_duration_in_mins")) * 60 * 1000;
     }
 
     public void createDB(String rootPwd) throws AceException
@@ -98,7 +99,7 @@ public class AuthorizationServer implements ICredentialsStore
         Set<String> auds = new HashSet<>();
         auds.add(rsName);
 
-        long resouceServerKnownExpiration = timeProvider.getCurrentTime() + HOW_LONG_TOKENS_LAST;
+        long resouceServerKnownExpiration = timeProvider.getCurrentTime() + tokenDurationInMs;
 
         dbCon.addRS(rsName, supportedProfiles, scopes, auds, supportedKeyTypes, supportedTokenTypes, supportedCOSEParams,
                 resouceServerKnownExpiration, PSK, null);
