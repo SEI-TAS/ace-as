@@ -99,7 +99,7 @@ public class AuthorizationServer implements ICredentialsStore
         Set<String> auds = new HashSet<>();
         auds.add(rsName);
 
-        long resouceServerKnownExpiration = timeProvider.getCurrentTime() + tokenDurationInMs;
+        long resouceServerKnownExpiration = tokenDurationInMs;
 
         dbCon.addRS(rsName, supportedProfiles, scopes, auds, supportedKeyTypes, supportedTokenTypes, supportedCOSEParams,
                 resouceServerKnownExpiration, PSK, null);
