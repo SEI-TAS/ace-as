@@ -1,6 +1,8 @@
 package edu.cmu.sei.ttg.aaiot.as;
 
 import edu.cmu.sei.ttg.aaiot.as.pairing.PairingManager;
+import edu.cmu.sei.ttg.aaiot.as.pairing.QRCodeManager;
+import edu.cmu.sei.ttg.aaiot.as.pairing.SixLbrManager;
 import edu.cmu.sei.ttg.aaiot.config.Config;
 import se.sics.ace.AceException;
 
@@ -20,6 +22,8 @@ public class Controller {
 
     private static final String DEFAULT_CLIENT_IP = "localhost";
     private static final String DEFAULT_DEVICE_IP = "localhost";
+
+    private static final String QR_CODE_IMAGE_FILE_PATH = "qrcode.png";
 
     private AuthorizationServer authorizationServer;
 
@@ -77,6 +81,7 @@ public class Controller {
                             device_ip = DEFAULT_DEVICE_IP;
                         }
 
+                        setupPairingChannel();
                         pair(device_ip, DEVICE_PAIRING_PORT);
                         System.out.println("Finished pairing procedure!");
                         break;
@@ -112,6 +117,21 @@ public class Controller {
         }
     }
 
+    private void setupPairingChannel() throws IOException
+    {
+        // TODO: Obtain QRCode image from webcam or other source.
+        // For now, simulate:
+        QRCodeManager.createQRCodeFile("testPSK", QR_CODE_IMAGE_FILE_PATH);
+
+        String devicePSK = QRCodeManager.readQRCode(QR_CODE_IMAGE_FILE_PATH);
+
+        // Now pass this PSK to 6lbr and start it up.
+        System.out.println("Setting up 802.15.4 security with PSK '" + devicePSK + "'");
+        //SixLbrManager.stop6lbr();
+        SixLbrManager.configureKey(devicePSK);
+        //SixLbrManager.start6lbr();
+    }
+
     private void pair(String server, int port) throws Exception
     {
         System.out.println("Started pairing");
@@ -119,6 +139,8 @@ public class Controller {
         String asId = Config.data.get("id");
         pairingManager.pair(asId, InetAddress.getByName(server), port);
         System.out.println("Finished pairing");
+
+        SixLbrManager.stop6lbr();
     }
 
     private void manageRules() throws IOException
