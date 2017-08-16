@@ -1,11 +1,14 @@
 package edu.cmu.sei.ttg.aaiot.as;
 
+import com.github.sarxos.webcam.Webcam;
 import edu.cmu.sei.ttg.aaiot.as.pairing.PairingManager;
 import edu.cmu.sei.ttg.aaiot.as.pairing.QRCodeManager;
 import edu.cmu.sei.ttg.aaiot.as.pairing.SixLbrManager;
 import edu.cmu.sei.ttg.aaiot.config.Config;
 import se.sics.ace.AceException;
 
+import javax.imageio.ImageIO;
+import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.util.Map;
@@ -73,6 +76,8 @@ public class Controller {
                         System.out.println("Finished pairing procedure!");
                         break;
                     case 'd':
+                        setupPairingChannel();
+
                         System.out.println("");
                         System.out.println("Input devices's IP, or (Enter) to use default (" + DEFAULT_DEVICE_IP + "): ");
                         String device_ip = scanner.nextLine();
@@ -81,7 +86,6 @@ public class Controller {
                             device_ip = DEFAULT_DEVICE_IP;
                         }
 
-                        setupPairingChannel();
                         pair(device_ip, DEVICE_PAIRING_PORT);
                         System.out.println("Finished pairing procedure!");
                         break;
@@ -121,15 +125,29 @@ public class Controller {
     {
         // TODO: Obtain QRCode image from webcam or other source.
         // For now, simulate:
-        QRCodeManager.createQRCodeFile("testPSK", QR_CODE_IMAGE_FILE_PATH);
+        //QRCodeManager.createQRCodeFile("testPSK", QR_CODE_IMAGE_FILE_PATH);
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("");
+        System.out.println("Press Enter when ready to scan QR Code (or (s) to skip): ");
+        String skip = scanner.nextLine();
+        if(!skip.equals("s"))
+        {
+            System.out.println("Getting image... ");
+            Webcam webcam = Webcam.getDefault();
+            webcam.open();
+            ImageIO.write(webcam.getImage(), "JPG", new File(QR_CODE_IMAGE_FILE_PATH));
+            webcam.close();
+            System.out.println("Image obtained.");
 
-        String devicePSK = QRCodeManager.readQRCode(QR_CODE_IMAGE_FILE_PATH);
+            String devicePSK = QRCodeManager.readQRCode(QR_CODE_IMAGE_FILE_PATH);
+            System.out.println("QR code decoded: " + devicePSK);
 
-        // Now pass this PSK to 6lbr and start it up.
-        System.out.println("Setting up 802.15.4 security with PSK '" + devicePSK + "'");
-        //SixLbrManager.stop6lbr();
-        SixLbrManager.configureKey(devicePSK);
-        //SixLbrManager.start6lbr();
+            // Now pass this PSK to 6lbr and start it up.
+            System.out.println("Setting up 802.15.4 security with PSK '" + devicePSK + "'");
+            //SixLbrManager.stop6lbr();
+            SixLbrManager.configureKey(devicePSK);
+            //SixLbrManager.start6lbr();
+        }
     }
 
     private void pair(String server, int port) throws Exception

@@ -2,16 +2,13 @@ package edu.cmu.sei.ttg.aaiot.as.pairing;
 
 import javax.imageio.ImageIO;
 
-import com.google.zxing.BinaryBitmap;
-import com.google.zxing.MultiFormatReader;
-import com.google.zxing.NotFoundException;
-import com.google.zxing.Result;
-import com.google.zxing.client.j2se.BufferedImageLuminanceSource;
+import com.google.zxing.*;
 import com.google.zxing.common.HybridBinarizer;
 import net.glxn.qrgen.core.image.ImageType;
 import net.glxn.qrgen.javase.QRCode;
 
-import java.io.FileInputStream;
+import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
@@ -41,7 +38,14 @@ public class QRCodeManager
      */
     public static String readQRCode(String filePath)
             throws IOException {
-        BinaryBitmap binaryBitmap = new BinaryBitmap(new HybridBinarizer(new BufferedImageLuminanceSource(ImageIO.read(new FileInputStream(filePath)))));
+        //LuminanceSource source = new BufferedImageLuminanceSource(ImageIO.read(new FileInputStream(filePath)));
+
+        File file = new File(filePath);
+        BufferedImage image = ImageIO.read(file);
+        int[] pixels = image.getRGB(0, 0, image.getWidth(), image.getHeight(), null, 0, image.getWidth());
+        RGBLuminanceSource source = new RGBLuminanceSource(image.getWidth(), image.getHeight(), pixels);
+
+        BinaryBitmap binaryBitmap = new BinaryBitmap(new HybridBinarizer(source));
         Result result = null;
         try
         {
