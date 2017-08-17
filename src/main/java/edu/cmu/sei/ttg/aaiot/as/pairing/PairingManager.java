@@ -29,8 +29,8 @@ public class PairingManager
     {
         UDPClient udpClient = new UDPClient(deviceIp, devicePort);
 
-        // Generate a new, random AES-256 key.
-        byte[] keyBytes = new byte[32];
+        // Generate a new, random AES-128 key.
+        byte[] keyBytes = new byte[16];
         random.nextBytes(keyBytes);
         SecretKeySpec key = new SecretKeySpec(keyBytes, "AES");
         String psk =  Base64.getEncoder().encodeToString(key.getEncoded());

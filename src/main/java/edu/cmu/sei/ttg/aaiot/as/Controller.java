@@ -1,16 +1,20 @@
 package edu.cmu.sei.ttg.aaiot.as;
 
 import com.github.sarxos.webcam.Webcam;
+import com.google.zxing.NotFoundException;
 import edu.cmu.sei.ttg.aaiot.as.pairing.PairingManager;
 import edu.cmu.sei.ttg.aaiot.as.pairing.QRCodeManager;
 import edu.cmu.sei.ttg.aaiot.as.pairing.SixLbrManager;
 import edu.cmu.sei.ttg.aaiot.config.Config;
 import se.sics.ace.AceException;
 
+import javax.crypto.spec.SecretKeySpec;
 import javax.imageio.ImageIO;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
+import java.security.SecureRandom;
+import java.util.Base64;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
@@ -35,6 +39,8 @@ public class Controller {
         Config.load(CONFIG_FILE);
 
         String rootPassword = Config.data.get("root_db_pwd");
+
+        //generateQRCode();
 
         // Create the server and its DB.
         String asId = Config.data.get("id");
@@ -121,26 +127,62 @@ public class Controller {
         }
     }
 
-    private void setupPairingChannel() throws IOException
+    private void generateQRCode() throws IOException
     {
-        // TODO: Obtain QRCode image from webcam or other source.
-        // For now, simulate:
-        //QRCodeManager.createQRCodeFile("testPSK", QR_CODE_IMAGE_FILE_PATH);
+        // Generate a new, random AES-128 key.
+        SecureRandom random = new SecureRandom();
+        byte[] keyBytes = new byte[16];
+        random.nextBytes(keyBytes);
+        SecretKeySpec key = new SecretKeySpec(keyBytes, "AES");
+        String psk =  Base64.getEncoder().encodeToString(key.getEncoded());
+        System.out.println("Base64 encoded key: " + psk);
+
+        QRCodeManager.createQRCodeFile(psk, QR_CODE_IMAGE_FILE_PATH);
+    }
+
+    private void setupPairingChannel() throws IOException, InterruptedException
+    {
+        // Obtain QRCode image from webcam or other source.
+        String devicePSK = "";
         Scanner scanner = new Scanner(System.in);
         System.out.println("");
         System.out.println("Press Enter when ready to scan QR Code (or (s) to skip): ");
         String skip = scanner.nextLine();
         if(!skip.equals("s"))
         {
-            System.out.println("Getting image... ");
-            Webcam webcam = Webcam.getDefault();
-            webcam.open();
-            ImageIO.write(webcam.getImage(), "JPG", new File(QR_CODE_IMAGE_FILE_PATH));
-            webcam.close();
-            System.out.println("Image obtained.");
+            int attemptsLeft = 5;
+            while(attemptsLeft > 0)
+            {
+                attemptsLeft--;
+                System.out.println("Getting image... ");
+                Webcam webcam = Webcam.getDefault();
+                webcam.open();
+                ImageIO.write(webcam.getImage(), "JPG", new File(QR_CODE_IMAGE_FILE_PATH));
+                webcam.close();
+                System.out.println("Image obtained.");
 
-            String devicePSK = QRCodeManager.readQRCode(QR_CODE_IMAGE_FILE_PATH);
-            System.out.println("QR code decoded: " + devicePSK);
+                try
+                {
+                    devicePSK = QRCodeManager.readQRCode(QR_CODE_IMAGE_FILE_PATH);
+                    System.out.println("QR code decoded: " + devicePSK);
+                    break;
+                }
+                catch(NotFoundException ex)
+                {
+                    System.out.println("QR code not detected.");
+                }
+
+                if(attemptsLeft > 0)
+                {
+                    System.out.println("Ensure QR Code is well positioned. Will try again in 3 seconds. ");
+                    Thread.sleep(3000);
+                }
+                else
+                {
+                    System.out.println("QR code could not be found after several attempts.");
+                    return;
+                }
+            }
 
             // Now pass this PSK to 6lbr and start it up.
             System.out.println("Setting up 802.15.4 security with PSK '" + devicePSK + "'");

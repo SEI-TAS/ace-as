@@ -4,6 +4,7 @@ import javax.imageio.ImageIO;
 
 import com.google.zxing.*;
 import com.google.zxing.common.HybridBinarizer;
+import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
 import net.glxn.qrgen.core.image.ImageType;
 import net.glxn.qrgen.javase.QRCode;
 
@@ -23,7 +24,7 @@ public class QRCodeManager
     public static void createQRCodeFile(String data, String filePath)
             throws IOException {
         FileOutputStream fos = new FileOutputStream(filePath, false);
-        QRCode.from(data).to(ImageType.PNG).writeTo(fos);
+        QRCode.from(data).to(ImageType.PNG).withErrorCorrection(ErrorCorrectionLevel.H).writeTo(fos);
         fos.close();
     }
 
@@ -37,7 +38,7 @@ public class QRCodeManager
      * @throws NotFoundException
      */
     public static String readQRCode(String filePath)
-            throws IOException {
+            throws IOException, NotFoundException {
         //LuminanceSource source = new BufferedImageLuminanceSource(ImageIO.read(new FileInputStream(filePath)));
 
         File file = new File(filePath);
@@ -47,13 +48,7 @@ public class QRCodeManager
 
         BinaryBitmap binaryBitmap = new BinaryBitmap(new HybridBinarizer(source));
         Result result = null;
-        try
-        {
-            result = new MultiFormatReader().decode(binaryBitmap);
-        } catch (NotFoundException e)
-        {
-            throw new IOException(e.toString());
-        }
+        result = new MultiFormatReader().decode(binaryBitmap);
         return result.getText();
     }
 }
