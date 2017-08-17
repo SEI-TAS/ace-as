@@ -46,7 +46,7 @@ public class AuthorizationServer implements ICredentialsStore
         supportedProfiles.add("coap_dtls");
         supportedKeyTypes.add("PSK");
         supportedTokenTypes.add(AccessTokenFactory.CWT_TYPE);
-        supportedCOSEParams.add(new COSEparams(MessageTag.Encrypt0, AlgorithmID.AES_CCM_16_64_256, AlgorithmID.Direct));
+        supportedCOSEParams.add(new COSEparams(MessageTag.Encrypt0, AlgorithmID.AES_CCM_16_64_128, AlgorithmID.Direct));
 
         timeProvider = new KissTime();
 
