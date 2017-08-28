@@ -187,7 +187,7 @@ public class Controller {
             // Now pass this PSK to 6lbr and start it up.
             System.out.println("Setting up 802.15.4 security with PSK '" + devicePSK + "'");
             //SixLbrManager.stop6lbr();
-            SixLbrManager.configureKey(devicePSK);
+            //SixLbrManager.configureKey(devicePSK);
             //SixLbrManager.start6lbr();
         }
     }
@@ -197,10 +197,11 @@ public class Controller {
         System.out.println("Started pairing");
         PairingManager pairingManager = new PairingManager(authorizationServer);
         String asId = Config.data.get("id");
-        pairingManager.pair(asId, InetAddress.getByName(server), port);
+        byte[] key128 = {'a', 'b', 'c', 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
+        pairingManager.pair(asId, key128, server);
         System.out.println("Finished pairing");
 
-        SixLbrManager.stop6lbr();
+        //SixLbrManager.stop6lbr();
     }
 
     private void manageRules() throws IOException
