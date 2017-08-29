@@ -4,7 +4,6 @@ import com.github.sarxos.webcam.Webcam;
 import com.google.zxing.NotFoundException;
 import edu.cmu.sei.ttg.aaiot.as.pairing.PairingManager;
 import edu.cmu.sei.ttg.aaiot.as.pairing.QRCodeManager;
-import edu.cmu.sei.ttg.aaiot.as.pairing.SixLbrManager;
 import edu.cmu.sei.ttg.aaiot.config.Config;
 import se.sics.ace.AceException;
 
@@ -12,7 +11,6 @@ import javax.crypto.spec.SecretKeySpec;
 import javax.imageio.ImageIO;
 import java.io.File;
 import java.io.IOException;
-import java.net.InetAddress;
 import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.Map;
@@ -22,15 +20,20 @@ import java.util.Set;
 /**
  * Created by sebastianecheverria on 7/18/17.
  */
-public class Controller {
+public class Controller
+{
+    private static final byte[] CLIENT_PAIRING_KEY = {'b', 'b', 'c', 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
+
+    // We do not need to know this, we just have it hear to simplify tests.
+    private static final byte[] PAIRING_KEY = {'a', 'b', 'c', 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
+
     private static final String CONFIG_FILE = "config.json";
-    private static final int CLIENT_PAIRING_PORT = 9876;
-    private static final int DEVICE_PAIRING_PORT = 9877;
 
     private static final String DEFAULT_CLIENT_IP = "localhost";
     private static final String DEFAULT_DEVICE_IP = "localhost";
 
     private static final String QR_CODE_IMAGE_FILE_PATH = "qrcode.png";
+    private static final String QR_CODE_TEST_IMAGE_FILE_PATH = "qrcode_original.png";
 
     private AuthorizationServer authorizationServer;
 
@@ -78,11 +81,16 @@ public class Controller {
                             ip = DEFAULT_CLIENT_IP;
                         }
 
-                        pair(ip, CLIENT_PAIRING_PORT);
+                        pair(ip, CLIENT_PAIRING_KEY);
                         System.out.println("Finished pairing procedure!");
                         break;
                     case 'd':
-                        setupPairingChannel();
+                        byte[] psk = getPairingPSK();
+                        if(psk == null)
+                        {
+                            System.out.println("Could not obtain pairing key, aborting procedure.");
+                            break;
+                        }
 
                         System.out.println("");
                         System.out.println("Input devices's IP, or (Enter) to use default (" + DEFAULT_DEVICE_IP + "): ");
@@ -92,7 +100,7 @@ public class Controller {
                             device_ip = DEFAULT_DEVICE_IP;
                         }
 
-                        pair(device_ip, DEVICE_PAIRING_PORT);
+                        pair(device_ip, psk);
                         System.out.println("Finished pairing procedure!");
                         break;
                     case 'h':
@@ -127,28 +135,27 @@ public class Controller {
         }
     }
 
+    // Only used to generate the QR code image to print. Should actually be in RS...
     private void generateQRCode() throws IOException
     {
-        // Generate a new, random AES-128 key.
-        SecureRandom random = new SecureRandom();
-        byte[] keyBytes = new byte[16];
-        random.nextBytes(keyBytes);
-        SecretKeySpec key = new SecretKeySpec(keyBytes, "AES");
-        String psk =  Base64.getEncoder().encodeToString(key.getEncoded());
+        String psk = Base64.getEncoder().encodeToString(PAIRING_KEY);
         System.out.println("Base64 encoded key: " + psk);
-
-        QRCodeManager.createQRCodeFile(psk, QR_CODE_IMAGE_FILE_PATH);
+        QRCodeManager.createQRCodeFile(psk, QR_CODE_TEST_IMAGE_FILE_PATH);
     }
 
-    private void setupPairingChannel() throws IOException, InterruptedException
+    private byte[] getPairingPSK() throws IOException, InterruptedException
     {
         // Obtain QRCode image from webcam or other source.
-        String devicePSK = "";
+        byte[] pskBytes = null;
         Scanner scanner = new Scanner(System.in);
         System.out.println("");
         System.out.println("Press Enter when ready to scan QR Code (or (s) to skip): ");
         String skip = scanner.nextLine();
-        if(!skip.equals("s"))
+        if(skip.equals("s"))
+        {
+            pskBytes = PAIRING_KEY;
+        }
+        else
         {
             int attemptsLeft = 5;
             while(attemptsLeft > 0)
@@ -163,9 +170,9 @@ public class Controller {
 
                 try
                 {
-                    devicePSK = QRCodeManager.readQRCode(QR_CODE_IMAGE_FILE_PATH);
+                    String devicePSK = QRCodeManager.readQRCode(QR_CODE_IMAGE_FILE_PATH);
                     System.out.println("QR code decoded: " + devicePSK);
-                    break;
+                    pskBytes = Base64.getDecoder().decode(devicePSK);
                 }
                 catch(NotFoundException ex)
                 {
@@ -180,28 +187,21 @@ public class Controller {
                 else
                 {
                     System.out.println("QR code could not be found after several attempts.");
-                    return;
+                    break;
                 }
             }
-
-            // Now pass this PSK to 6lbr and start it up.
-            System.out.println("Setting up 802.15.4 security with PSK '" + devicePSK + "'");
-            //SixLbrManager.stop6lbr();
-            //SixLbrManager.configureKey(devicePSK);
-            //SixLbrManager.start6lbr();
         }
+
+        return pskBytes;
     }
 
-    private void pair(String server, int port) throws Exception
+    private void pair(String server, byte[] psk) throws Exception
     {
         System.out.println("Started pairing");
         PairingManager pairingManager = new PairingManager(authorizationServer);
         String asId = Config.data.get("id");
-        byte[] key128 = {'a', 'b', 'c', 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
-        pairingManager.pair(asId, key128, server);
+        pairingManager.pair(asId, psk, server);
         System.out.println("Finished pairing");
-
-        //SixLbrManager.stop6lbr();
     }
 
     private void manageRules() throws IOException
