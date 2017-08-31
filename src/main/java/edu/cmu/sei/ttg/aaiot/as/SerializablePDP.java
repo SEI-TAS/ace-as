@@ -19,53 +19,48 @@ public class SerializablePDP implements PDP, AutoCloseable {
 
     private DBConnector db = null;
 
-    /**
-     * The identifiers of the clients allowed to submit requests to /token
-     */
-    private Set<String> clients = new HashSet<>();
+    // The identifiers of the devices allowed to submit requests to /token.
+    private Set<String> tokenAllowedDevices = new HashSet<>();
 
-    /**
-     * The identifiers of the resource servers allowed to submit requests to
-     * /introspect
-     */
-    private Set<String> resourceServers = new HashSet<>();
+    // The identifiers of the devices allowed to submit requests to /introspect.
+    private Set<String> introspectAllowedDevices = new HashSet<>();
 
     /**
      * Maps identifiers of client to a map that maps the audiences they may
      * access to the scopes they may access for these audiences.
-     *
-     * Note that this storage assumes that scopes are split by whitespace as
-     * per the standard's specification.
      */
     private Map<String, Map<String, Set<String>>> acl = new HashMap<>();
 
+    // File where all this info is permanently stored.
     private String aclFile;
 
     /**
      * @param db  the database connector
+     * @param aclFile the path and filename to the file where this will be stored.
      * @return  the PDP
-     * @throws AceException
-     * @throws IOException
      */
-    public SerializablePDP(DBConnector db, String aclFile) throws AceException, IOException
+    public SerializablePDP(DBConnector db, String aclFile)
     {
         this.db = db;
         this.aclFile = aclFile;
     }
 
     @Override
-    public boolean canAccessToken(String clientId) {
-        return this.clients.contains(clientId);
+    public boolean canAccessToken(String deviceId)
+    {
+        return this.tokenAllowedDevices.contains(deviceId);
     }
 
     @Override
-    public boolean canAccessIntrospect(String rsId) {
-        return this.resourceServers.contains(rsId);
+    public boolean canAccessIntrospect(String deviceId)
+    {
+        return this.introspectAllowedDevices.contains(deviceId);
     }
 
     @Override
     public String canAccess(String clientId, String aud, String scope)
-            throws AceException {
+            throws AceException
+    {
         Map<String,Set<String>> clientACL = this.acl.get(clientId);
         if (clientACL == null || clientACL.isEmpty()) {
             return null;
@@ -113,61 +108,50 @@ public class SerializablePDP implements PDP, AutoCloseable {
                 grantedScopes += requestedScopes[i];
             }
         }
-        //all scopes found
+
+        // All scopes found
         if (grantedScopes.isEmpty()) {
             return null;
         }
+
         return grantedScopes;
     }
 
     @Override
-    public void close() throws Exception {
+    public void close() throws Exception
+    {
         this.db.close();
     }
 
-    public void addClient(String clientId)
+    public void addTokenDevice(String deviceId)
     {
-        if(!clients.contains(clientId))
+        if(!tokenAllowedDevices.contains(deviceId))
         {
-            clients.add(clientId);
+            tokenAllowedDevices.add(deviceId);
         }
     }
 
-    public void removeClient(String clientId)
+    public void removeTokenDevice(String deviceId)
     {
-        if(clients.contains(clientId))
+        if(tokenAllowedDevices.contains(deviceId))
         {
-            clients.remove(clientId);
-        }
-
-        if(acl.containsKey(clientId))
-        {
-            acl.remove(clientId);
+            tokenAllowedDevices.remove(deviceId);
         }
     }
 
-    public void addRS(String rsId)
+    public void addIntrospectDevice(String deviceId)
     {
-        if(!resourceServers.contains(rsId))
+        if(!introspectAllowedDevices.contains(deviceId))
         {
-            resourceServers.add(rsId);
+            introspectAllowedDevices.add(deviceId);
         }
     }
 
-    public void removeRS(String rsId)
+    public void removeIntrospectDevice(String deviceId)
     {
-        if(resourceServers.contains(rsId))
+        if(introspectAllowedDevices.contains(deviceId))
         {
-            resourceServers.remove(rsId);
-        }
-
-        for(String clientId : acl.keySet())
-        {
-            Map<String, Set<String>> rss = acl.get(clientId);
-            if(rss.containsKey(rsId))
-            {
-                rss.remove(rsId);
-            }
+            introspectAllowedDevices.remove(deviceId);
         }
     }
 
@@ -206,14 +190,34 @@ public class SerializablePDP implements PDP, AutoCloseable {
         acl.get(clientId).get(rsId).remove(scope);
     }
 
-    public Set<String> getClients()
+    public void clearRSRules(String rsId)
     {
-        return clients;
+        for(String clientId : acl.keySet())
+        {
+            Map<String, Set<String>> rsRules = acl.get(clientId);
+            if(rsRules.containsKey(rsId))
+            {
+                rsRules.remove(rsId);
+            }
+        }
     }
 
-    public Set<String> getResourceServers()
+    public void clearClientRules(String clientId)
     {
-        return resourceServers;
+        if(acl.containsKey(clientId))
+        {
+            acl.remove(clientId);
+        }
+    }
+
+    public Set<String> getTokenAllowedDevices()
+    {
+        return tokenAllowedDevices;
+    }
+
+    public Set<String> getIntrospectAllowedDevices()
+    {
+        return introspectAllowedDevices;
     }
 
     public Map<String, Set<String>> getRules(String clientId)
@@ -224,7 +228,8 @@ public class SerializablePDP implements PDP, AutoCloseable {
     public void loadFromFile() throws AceException, IOException
     {
         FileInputStream fs;
-        try {
+        try
+        {
             fs = new FileInputStream(aclFile);
         }
         catch(IOException ex)
@@ -234,20 +239,21 @@ public class SerializablePDP implements PDP, AutoCloseable {
         }
 
         JSONTokener parser = new JSONTokener(fs);
-        JSONArray config = new JSONArray(parser);
+        JSONArray fileData = new JSONArray(parser);
 
-        //Parse the clients allowed to access this AS
-        if (!(config.get(0) instanceof JSONArray)) {
+        // Parse the clients allowed to access this AS
+        if (!(fileData.get(0) instanceof JSONArray))
+        {
             fs.close();
             throw new AceException("Invalid PDP configuration");
         }
-        JSONArray clientsJ = (JSONArray)config.get(0);
-        clients = new HashSet<>();
+        JSONArray clientsJ = (JSONArray)fileData.get(0);
+        tokenAllowedDevices = new HashSet<>();
         Iterator<Object> it = clientsJ.iterator();
         while (it.hasNext()) {
             Object next = it.next();
             if (next instanceof String) {
-                clients.add((String)next);
+                tokenAllowedDevices.add((String)next);
             } else {
                 fs.close();
                 throw new AceException("Invalid PDP configuration");
@@ -255,17 +261,17 @@ public class SerializablePDP implements PDP, AutoCloseable {
         }
 
         //Parse the RS allowed to access this AS
-        if (!(config.get(1) instanceof JSONArray)) {
+        if (!(fileData.get(1) instanceof JSONArray)) {
             fs.close();
             throw new AceException("Invalid PDP configuration");
         }
-        JSONArray rsJ = (JSONArray)config.get(1);
-        resourceServers = new HashSet<>();
+        JSONArray rsJ = (JSONArray)fileData.get(1);
+        introspectAllowedDevices = new HashSet<>();
         it = rsJ.iterator();
         while (it.hasNext()) {
             Object next = it.next();
             if (next instanceof String) {
-                resourceServers.add((String)next);
+                introspectAllowedDevices.add((String)next);
             } else {
                 fs.close();
                 throw new AceException("Invalid PDP configuration");
@@ -273,11 +279,11 @@ public class SerializablePDP implements PDP, AutoCloseable {
         }
 
         //Read the acl
-        if (!(config.get(2) instanceof JSONObject)) {
+        if (!(fileData.get(2) instanceof JSONObject)) {
             fs.close();
             throw new AceException("Invalid PDP configuration");
         }
-        JSONObject aclJ = (JSONObject)config.get(2);
+        JSONObject aclJ = (JSONObject)fileData.get(2);
         acl = new HashMap<>();
         Iterator<String> clientACL = aclJ.keys();
         //Iterate through the client_ids
@@ -318,8 +324,8 @@ public class SerializablePDP implements PDP, AutoCloseable {
 
     public void saveToFile() throws IOException
     {
-        JSONArray clientsArray = new JSONArray(clients);
-        JSONArray rsArray = new JSONArray(resourceServers);
+        JSONArray clientsArray = new JSONArray(tokenAllowedDevices);
+        JSONArray rsArray = new JSONArray(introspectAllowedDevices);
         JSONObject aclObject = new JSONObject(acl);
 
         JSONArray mainArray = new JSONArray();
@@ -335,9 +341,11 @@ public class SerializablePDP implements PDP, AutoCloseable {
 
     public void wipe() throws IOException
     {
-        clients.clear();
-        resourceServers.clear();
+        tokenAllowedDevices.clear();
+        introspectAllowedDevices.clear();
         acl.clear();
+
+        // Save to file to save an empty file.
         saveToFile();
     }
 }

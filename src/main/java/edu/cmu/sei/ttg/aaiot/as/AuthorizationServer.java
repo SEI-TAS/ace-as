@@ -74,12 +74,15 @@ public class AuthorizationServer implements ICredentialsStore
 
     public Set<String> getClients()
     {
-        return pdp.getClients();
+        // TODO: probably beetter to fix this so that clients in the DB are returned. In the future, the list of
+        // TODO: devices allowed to get a token may not match the clients list exactly. Needs new method in dbCon.
+        return pdp.getTokenAllowedDevices();
     }
 
     public Set<String> getResourceServers()
     {
-        return pdp.getResourceServers();
+        // TODO: fix this once dbCon actually has a method to get all RSSs. Right now this will return clients and RSs.
+        return pdp.getIntrospectAllowedDevices();
     }
 
     public Map<String, Set<String>> getRules(String clientId)
@@ -110,7 +113,7 @@ public class AuthorizationServer implements ICredentialsStore
                 resouceServerKnownExpiration, PSK, null);
 
         // Authorize RS to introspect.
-        pdp.addRS(rsName);
+        pdp.addIntrospectDevice(rsName);
         try {
             pdp.saveToFile();
         }
@@ -124,7 +127,8 @@ public class AuthorizationServer implements ICredentialsStore
     {
         System.out.println("Removing resource server if it was there.");
         dbCon.deleteRS(rsName);
-        pdp.removeRS(rsName);
+        pdp.removeIntrospectDevice(rsName);
+        pdp.clearRSRules(rsName);
         pdp.saveToFile();
     }
 
@@ -134,9 +138,11 @@ public class AuthorizationServer implements ICredentialsStore
         dbCon.addClient(clientName, supportedProfiles, null, null, supportedKeyTypes, PSK,
                 null);
 
-        // Authorize new client to ask for tokens.
-        pdp.addClient(clientName);
-        try {
+        // Authorize new client to ask for tokens and introspect.
+        pdp.addTokenDevice(clientName);
+        pdp.addIntrospectDevice(clientName);
+        try
+        {
             pdp.saveToFile();
         }
         catch(IOException ex)
@@ -149,7 +155,9 @@ public class AuthorizationServer implements ICredentialsStore
     {
         System.out.println("Removing client if it was there.");
         dbCon.deleteClient(clientName);
-        pdp.removeClient(clientName);
+        pdp.removeTokenDevice(clientName);
+        pdp.removeIntrospectDevice(clientName);
+        pdp.clearClientRules(clientName);
         pdp.saveToFile();
     }
 
