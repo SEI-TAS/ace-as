@@ -16,9 +16,7 @@ import se.sics.ace.examples.PostgreSQLDBAdapter;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Created by Sebastian on 2017-05-09.
@@ -72,17 +70,14 @@ public class AuthorizationServer implements ICredentialsStore
         coapServer = new CoapsAS(asId, dbCon, pdp, timeProvider, null);
     }
 
-    public Set<String> getClients()
+    public Set<String> getClients() throws AceException
     {
-        // TODO: probably beetter to fix this so that clients in the DB are returned. In the future, the list of
-        // TODO: devices allowed to get a token may not match the clients list exactly. Needs new method in dbCon.
-        return pdp.getTokenAllowedDevices();
+        return dbCon.getClients();
     }
 
-    public Set<String> getResourceServers()
+    public Set<String> getResourceServers() throws AceException
     {
-        // TODO: fix this once dbCon actually has a method to get all RSSs. Right now this will return clients and RSs.
-        return pdp.getIntrospectAllowedDevices();
+        return dbCon.getRSS();
     }
 
     public Map<String, Set<String>> getRules(String clientId)
@@ -225,6 +220,52 @@ public class AuthorizationServer implements ICredentialsStore
         keyData.Add(KeyKeys.Octet_K.AsCBOR(), CBORObject.FromObject(rawKey));
         OneKey key = new OneKey(keyData);
         return key;
+    }
+
+    public Map<String, Set<String>> getAllTokensByRS() throws AceException
+    {
+        // First clear expired tokens.
+        dbCon.purgeExpiredTokens(this.timeProvider.getCurrentTime());
+
+        // Then get all token ids (cti).
+        Set<String> tokenIds = new HashSet<>();
+        for(String clientName : getClients())
+        {
+            tokenIds.addAll(dbCon.getCtis4Client(clientName));
+        }
+
+        // Then structure all token ids by resource server associated to them.
+        Map<String, Set<String>> tokensByResourceServer = new HashMap<>();
+        for(String tokenId : tokenIds)
+        {
+            Map<String, CBORObject> claims = dbCon.getClaims(tokenId);
+            System.out.println(claims);
+            CBORObject rsNameCBOR = claims.get("aud");
+            if(rsNameCBOR != null)
+            {
+                String rsName = rsNameCBOR.AsString();
+                if (!tokensByResourceServer.containsKey(rsName))
+                {
+                    tokensByResourceServer.put(rsName, new HashSet<>());
+                }
+                tokensByResourceServer.get(rsName).add(tokenId);
+            }
+        }
+
+        return tokensByResourceServer;
+    }
+
+    public String getClientForCti(String cti) throws AceException
+    {
+        return dbCon.getClient4Cti(cti);
+    }
+
+    public void revokeToken(String cti) throws AceException
+    {
+        // TODO: mark the token in a list of revoked tokens or something.
+
+        // Remove the token from the valid ones.
+        dbCon.deleteToken(cti);
     }
 
 }

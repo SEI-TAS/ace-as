@@ -67,6 +67,7 @@ public class Controller
                 System.out.println("(l) list paired clients and devices");
                 System.out.println("(r) remove a paired client");
                 System.out.println("(e) remove a paired device");
+                System.out.println("(v) revoke an existing token");
                 System.out.println("(q)uit");
                 char choice = scanner.nextLine().charAt(0);
 
@@ -121,6 +122,9 @@ public class Controller
                         String rsName = scanner.nextLine();
                         removePairedRS(rsName);
                         break;
+                    case 'v':
+                        revokeToken();
+                        break;
                     case 'q':
                         authorizationServer.stop();
                         System.exit(0);
@@ -131,6 +135,7 @@ public class Controller
             catch(Exception ex)
             {
                 System.out.println("Error processing command: " + ex.toString());
+                ex.printStackTrace();
             }
         }
     }
@@ -204,7 +209,7 @@ public class Controller
         System.out.println("Finished pairing");
     }
 
-    private void manageRules() throws IOException
+    private void manageRules() throws IOException, AceException
     {
         Scanner scanner = new Scanner(System.in);
 
@@ -267,7 +272,7 @@ public class Controller
         }
     }
 
-    public void listPairedClientsAndDevices()
+    public void listPairedClientsAndDevices() throws AceException
     {
         System.out.println("");
         System.out.println("Paired clients: ");
@@ -292,5 +297,42 @@ public class Controller
     public void removePairedRS(String rsName) throws AceException, IOException
     {
         authorizationServer.removeResourceServer(rsName);
+    }
+
+    public void revokeToken() throws AceException
+    {
+        Map<String, Set<String>> tokensByResourceServer = authorizationServer.getAllTokensByRS();
+
+        // List all valid tokens by resource server for the user to choose.
+        System.out.println("");
+        System.out.println("Valid tokens: ");
+        for(String rsName : tokensByResourceServer.keySet())
+        {
+            for(String tokenId : tokensByResourceServer.get(rsName))
+            {
+                System.out.println("Token id: " + tokenId + " - for RS " + rsName + " to client " + authorizationServer.getClientForCti(tokenId));
+            }
+        }
+
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("");
+        System.out.println("Input the id of the token to be revoked, or (q) to cancel: ");
+        String tokenToRevoke = scanner.nextLine();
+
+        if(tokenToRevoke.equals("q"))
+        {
+            System.out.println("Not revoking tokens.");
+            return;
+        }
+
+        try
+        {
+            authorizationServer.revokeToken(tokenToRevoke);
+            System.out.println("Token revoked");
+        }
+        catch(Exception ex)
+        {
+            System.out.println("Error revoking token: " + ex.toString());
+        }
     }
 }
