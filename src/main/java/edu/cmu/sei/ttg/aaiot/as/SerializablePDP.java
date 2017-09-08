@@ -58,7 +58,7 @@ public class SerializablePDP implements PDP, AutoCloseable {
     }
 
     @Override
-    public String canAccess(String clientId, String aud, String scope)
+    public String canAccess(String clientId, Set<String> aud, String scope)
             throws AceException
     {
         Map<String,Set<String>> clientACL = this.acl.get(clientId);
@@ -67,8 +67,11 @@ public class SerializablePDP implements PDP, AutoCloseable {
         }
 
         Set<String> scopes = null;
-        Set<String> rss = this.db.getRSS(aud);
-        if (rss == null) {
+        Set<String> rss = new HashSet<>();
+        for (String audE : aud) {
+            rss.addAll(this.db.getRSS(audE));
+        }
+        if (rss.isEmpty()) {
             return null;
         }
         for (String rs : rss) {

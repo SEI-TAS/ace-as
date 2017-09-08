@@ -6,6 +6,7 @@ import edu.cmu.sei.ttg.aaiot.as.pairing.ICredentialsStore;
 import edu.cmu.sei.ttg.aaiot.config.Config;
 import se.sics.ace.AceException;
 import se.sics.ace.COSEparams;
+import se.sics.ace.Constants;
 import se.sics.ace.TimeProvider;
 import se.sics.ace.as.AccessTokenFactory;
 import se.sics.ace.as.DBConnector;
@@ -28,7 +29,7 @@ public class AuthorizationServer implements ICredentialsStore
 
     private Set<String> supportedProfiles = new HashSet<>();
     private Set<String> supportedKeyTypes = new HashSet<>();
-    private Set<Integer> supportedTokenTypes = new HashSet<>();
+    private Set<Short> supportedTokenTypes = new HashSet<>();
     private Set<COSEparams> supportedCOSEParams = new HashSet<>();
 
     private PostgreSQLDBAdapter dbAdapter;
@@ -131,7 +132,7 @@ public class AuthorizationServer implements ICredentialsStore
     public void addClient(String clientName, OneKey PSK) throws AceException, COSE.CoseException
     {
         dbCon.addClient(clientName, supportedProfiles, null, null, supportedKeyTypes, PSK,
-                null);
+                null, false);
 
         // Authorize new client to ask for tokens and introspect.
         pdp.addTokenDevice(clientName);
@@ -238,9 +239,9 @@ public class AuthorizationServer implements ICredentialsStore
         Map<String, Set<String>> tokensByResourceServer = new HashMap<>();
         for(String tokenId : tokenIds)
         {
-            Map<String, CBORObject> claims = dbCon.getClaims(tokenId);
+            Map<Short, CBORObject> claims = dbCon.getClaims(tokenId);
             System.out.println(claims);
-            CBORObject rsNameCBOR = claims.get("aud");
+            CBORObject rsNameCBOR = claims.get(Constants.AUD);
             if(rsNameCBOR != null)
             {
                 String rsName = rsNameCBOR.AsString();
