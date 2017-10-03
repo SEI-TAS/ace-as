@@ -16,7 +16,6 @@ import java.util.Set;
 public class PairingManager
 {
     private static final String SCOPE_SEPARATOR = ";";
-    private static final String PAIRING_KEY_ID = "pairing";
 
     private SecureRandom random = new SecureRandom();
     private ICredentialsStore credentialsStore;
@@ -35,7 +34,7 @@ public class PairingManager
         String psk = Base64.getEncoder().encodeToString(newKey.getEncoded());
 
         // Connect to pairing device using pairing key.
-        CoapsPskClient coapClient = new CoapsPskClient(deviceIp, PairingResource.PAIRING_PORT, PAIRING_KEY_ID, pairingKey);
+        CoapsPskClient coapClient = new CoapsPskClient(deviceIp, PairingResource.PAIRING_PORT, PairingResource.PAIRING_KEY_ID, pairingKey);
 
         // Send our ID and the PSK to use with us.
         System.out.println("Sending pair request");

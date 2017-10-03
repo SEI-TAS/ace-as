@@ -39,7 +39,15 @@ public class Controller
 
     public void run() throws Exception
     {
-        Config.load(CONFIG_FILE);
+        try
+        {
+            Config.load(CONFIG_FILE);
+        }
+        catch(Exception ex)
+        {
+            System.out.println("Error loading config file: " + ex.toString());
+            return;
+        }
 
         String rootPassword = Config.data.get("root_db_pwd");
 

@@ -10,5 +10,8 @@
 .gradle/
 ._.DS_Store
 out/
+*.DS_Store/
 /.DS_Store
+/classes
+*.png
 test_acl.json
