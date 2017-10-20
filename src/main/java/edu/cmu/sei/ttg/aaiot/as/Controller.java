@@ -284,16 +284,24 @@ public class Controller
     {
         System.out.println("");
         System.out.println("Paired clients: ");
-        for(String clientName : authorizationServer.getClients())
+        Set<String> clients = authorizationServer.getClients();
+        if(clients != null)
         {
-            System.out.println("  " + clientName);
+            for (String clientName : clients)
+            {
+                System.out.println("  " + clientName);
+            }
         }
 
         System.out.println("");
         System.out.println("Paired devices: ");
-        for(String resourceServer : authorizationServer.getResourceServers())
+        Set<String> devices = authorizationServer.getResourceServers();
+        if(devices != null)
         {
-            System.out.println("  " + resourceServer);
+            for (String resourceServer : devices)
+            {
+                System.out.println("  " + resourceServer);
+            }
         }
     }
 
