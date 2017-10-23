@@ -57,7 +57,7 @@ public class Controller
         String asId = Config.data.get("id");
         authorizationServer = new AuthorizationServer(asId);
         authorizationServer.createDB(rootPassword);
-        authorizationServer.connectToDB(Config.data.get("acl_path"));
+        authorizationServer.connectToDB();
 
         // Start the server.
         authorizationServer.start();
@@ -143,7 +143,7 @@ public class Controller
             catch(Exception ex)
             {
                 System.out.println("Error processing command: " + ex.toString());
-                ex.printStackTrace();
+                //ex.printStackTrace();
             }
         }
     }

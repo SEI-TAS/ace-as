@@ -12,6 +12,7 @@ import se.sics.ace.as.AccessTokenFactory;
 import se.sics.ace.as.DBConnector;
 import se.sics.ace.coap.as.CoapDBConnector;
 import se.sics.ace.coap.as.CoapsAS;
+import se.sics.ace.examples.KissPDP;
 import se.sics.ace.examples.KissTime;
 import se.sics.ace.examples.PostgreSQLDBAdapter;
 
@@ -36,9 +37,7 @@ public class AuthorizationServer implements ICredentialsStore
     private CoapsAS coapServer = null;
     private CoapDBConnector dbCon;
     private TimeProvider timeProvider;
-    private SerializablePDP pdp;
-
-    private String aclFilePath;
+    private KissPDP pdp;
 
     public AuthorizationServer(String asId) throws AceException, IOException, CoseException {
         this.asId = asId;
@@ -62,12 +61,10 @@ public class AuthorizationServer implements ICredentialsStore
         dbAdapter.createDBAndTables(rootPwd);
     }
 
-    public void connectToDB(String aclFilePath) throws AceException, IOException, SQLException, CoseException  {
+    public void connectToDB() throws AceException, IOException, SQLException, CoseException  {
         dbCon = new CoapDBConnector(dbAdapter, PostgreSQLDBAdapter.DEFAULT_DB_URL, Config.data.get("db_user"), Config.data.get("db_pwd"));
 
-        this.aclFilePath = aclFilePath;
-        this.pdp = new SerializablePDP(dbCon, aclFilePath);
-        this.pdp.loadFromFile();
+        this.pdp = new KissPDP(Config.data.get("root_db_pwd"), dbCon);
         coapServer = new CoapsAS(asId, dbCon, pdp, timeProvider, null);
     }
 
@@ -81,21 +78,19 @@ public class AuthorizationServer implements ICredentialsStore
         return dbCon.getRSS();
     }
 
-    public Map<String, Set<String>> getRules(String clientId)
+    public Map<String, Set<String>> getRules(String clientId) throws AceException
     {
-        return pdp.getRules(clientId);
+        return pdp.getAllAccess(clientId);
     }
 
-    public void addRule(String clientId, String rsId, String scope) throws IOException
+    public void addRule(String clientId, String rsId, String scope) throws IOException, AceException
     {
-        pdp.addRule(clientId, rsId, scope);
-        pdp.saveToFile();
+        pdp.addAccess(clientId, rsId, scope);
     }
 
-    public void removeRule(String clientId, String rsId, String scope) throws IOException
+    public void removeRule(String clientId, String rsId, String scope) throws IOException, AceException
     {
-        pdp.removeRule(clientId, rsId, scope);
-        pdp.saveToFile();
+        pdp.revokeAccess(clientId, rsId, scope);
     }
 
     // This should be the result of the pairing procedure, adding a RS along with the shared key to use with it.
@@ -109,23 +104,19 @@ public class AuthorizationServer implements ICredentialsStore
                 resouceServerKnownExpiration, PSK, null);
 
         // Authorize RS to introspect.
-        pdp.addIntrospectDevice(rsName);
-        try {
-            pdp.saveToFile();
-        }
-        catch(IOException ex)
-        {
-            throw new AceException(ex.toString());
-        }
+        pdp.addIntrospectAccess(rsName);
     }
 
     public void removeResourceServer(String rsName) throws AceException, IOException
     {
         System.out.println("Removing resource server if it was there.");
         dbCon.deleteRS(rsName);
-        pdp.removeIntrospectDevice(rsName);
-        pdp.clearRSRules(rsName);
-        pdp.saveToFile();
+        pdp.revokeIntrospectAccess(rsName);
+
+        for(String clientId : getClients())
+        {
+            pdp.revokeAllRsAccess(clientId, rsName);
+        }
     }
 
     // This should be the result of the pairing procedure, adding a client along with the shared key to use with it.
@@ -135,26 +126,17 @@ public class AuthorizationServer implements ICredentialsStore
                 null, false);
 
         // Authorize new client to ask for tokens and introspect.
-        pdp.addTokenDevice(clientName);
-        pdp.addIntrospectDevice(clientName);
-        try
-        {
-            pdp.saveToFile();
-        }
-        catch(IOException ex)
-        {
-            throw new AceException(ex.toString());
-        }
+        pdp.addTokenAccess(clientName);
+        pdp.addIntrospectAccess(clientName);
     }
 
     public void removeClient(String clientName) throws AceException, IOException
     {
         System.out.println("Removing client if it was there.");
         dbCon.deleteClient(clientName);
-        pdp.removeTokenDevice(clientName);
-        pdp.removeIntrospectDevice(clientName);
-        pdp.clearClientRules(clientName);
-        pdp.saveToFile();
+        pdp.revokeTokenAccess(clientName);
+        pdp.revokeIntrospectAccess(clientName);
+        pdp.revokeAllAccess(clientName);
     }
 
     @Override
@@ -211,7 +193,6 @@ public class AuthorizationServer implements ICredentialsStore
     public void wipeData(String rootPwd) throws IOException, AceException
     {
         this.dbAdapter.wipeDB(rootPwd);
-        this.pdp.wipe();
     }
 
     private OneKey createOneKeyFromBytes(byte[] rawKey) throws COSE.CoseException
@@ -263,8 +244,6 @@ public class AuthorizationServer implements ICredentialsStore
 
     public void revokeToken(String cti) throws AceException
     {
-        // TODO: mark the token in a list of revoked tokens or something.
-
         // Remove the token from the valid ones.
         dbCon.deleteToken(cti);
     }
