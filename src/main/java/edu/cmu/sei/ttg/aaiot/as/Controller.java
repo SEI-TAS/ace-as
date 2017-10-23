@@ -240,6 +240,7 @@ public class Controller
             else
             {
                 System.out.println("Invalid client.");
+                return;
             }
         }
 
