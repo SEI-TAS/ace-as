@@ -7,10 +7,13 @@ package edu.cmu.sei.ttg.aaiot.as;
 public class Program {
     public static void main(String[] args)
     {
-        try {
+        try
+        {
             Controller controller = new Controller();
-            controller.run();
-        } catch (Exception e)
+            controller.setup();
+            controller.start();
+        }
+        catch (Exception e)
         {
             e.printStackTrace();
             System.out.println(e.toString());

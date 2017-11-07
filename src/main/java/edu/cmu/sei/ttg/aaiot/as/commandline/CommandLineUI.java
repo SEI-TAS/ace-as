@@ -7,61 +7,32 @@ import edu.cmu.sei.ttg.aaiot.as.pairing.QRCodeManager;
 import edu.cmu.sei.ttg.aaiot.config.Config;
 import se.sics.ace.AceException;
 
-import javax.crypto.spec.SecretKeySpec;
 import javax.imageio.ImageIO;
 import java.io.File;
 import java.io.IOException;
-import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
 
 /**
- * Created by sebastianecheverria on 7/18/17.
+ * Created by sebastianecheverria on 11/1/17.
  */
-public class Controller
+public class CommandLineUI
 {
-    private static final byte[] CLIENT_PAIRING_KEY = {'b', 'b', 'c', 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
-
-    // We do not need to know this, we just have it hear to simplify tests.
-    private static final byte[] PAIRING_KEY = {'a', 'b', 'c', 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
-
-    private static final String CONFIG_FILE = "config.json";
-
-    private static final String DEFAULT_CLIENT_IP = "localhost";
-    private static final String DEFAULT_DEVICE_IP = "localhost";
-
-    private static final String QR_CODE_IMAGE_FILE_PATH = "qrcode.png";
-    private static final String QR_CODE_TEST_IMAGE_FILE_PATH = "qrcode_original.png";
-
     private AuthorizationServer authorizationServer;
 
-    public void run() throws Exception
+    public void run(AuthorizationServer authorizationServer) throws Exception
     {
-        try
-        {
-            Config.load(CONFIG_FILE);
-        }
-        catch(Exception ex)
-        {
-            System.out.println("Error loading config file: " + ex.toString());
-            return;
-        }
+        this.authorizationServer = authorizationServer;
+        showMainMenu();
+    }
 
-        String rootPassword = Config.data.get("root_db_pwd");
-
-        //generateQRCode();
-
-        // Create the server and its DB.
-        String asId = Config.data.get("id");
-        authorizationServer = new AuthorizationServer(asId);
-        authorizationServer.createDB(rootPassword);
-        authorizationServer.connectToDB();
-
-        // Start the server.
-        authorizationServer.start();
-
+    /**
+     * Shows the main menu and calls corresponding handlers.
+     */
+    private void showMainMenu()
+    {
         Scanner scanner = new Scanner(System.in);
 
         while(true) {
@@ -83,14 +54,15 @@ public class Controller
                 {
                     case 'c':
                         System.out.println("");
-                        System.out.println("Input client's IP, or (Enter) to use default (" + DEFAULT_CLIENT_IP + "): ");
+                        System.out.println("Input client's IP, or (Enter) to use default (" + Controller.DEFAULT_CLIENT_IP + "): ");
                         String ip = scanner.nextLine();
                         if (ip.equals(""))
                         {
-                            ip = DEFAULT_CLIENT_IP;
+                            ip = Controller.DEFAULT_CLIENT_IP;
                         }
 
-                        pair(ip, CLIENT_PAIRING_KEY);
+                        pair(ip, Controller.CLIENT_PAIRING_KEY);
+
                         System.out.println("Finished pairing procedure!");
                         break;
                     case 'd':
@@ -102,11 +74,11 @@ public class Controller
                         }
 
                         System.out.println("");
-                        System.out.println("Input devices's IP, or (Enter) to use default (" + DEFAULT_DEVICE_IP + "): ");
+                        System.out.println("Input devices's IP, or (Enter) to use default (" + Controller.DEFAULT_DEVICE_IP + "): ");
                         String device_ip = scanner.nextLine();
                         if (device_ip.equals(""))
                         {
-                            device_ip = DEFAULT_DEVICE_IP;
+                            device_ip = Controller.DEFAULT_DEVICE_IP;
                         }
 
                         pair(device_ip, psk);
@@ -119,16 +91,10 @@ public class Controller
                         listPairedClientsAndDevices();
                         break;
                     case 'r':
-                        System.out.println("");
-                        System.out.println("Input client's name/id ");
-                        String clientName = scanner.nextLine();
-                        removePairedClient(clientName);
+                        removePairedClient(scanner);
                         break;
                     case 'e':
-                        System.out.println("");
-                        System.out.println("Input RS's name/id ");
-                        String rsName = scanner.nextLine();
-                        removePairedRS(rsName);
+                        removePairedRS(scanner);
                         break;
                     case 'v':
                         revokeToken();
@@ -148,14 +114,6 @@ public class Controller
         }
     }
 
-    // Only used to generate the QR code image to print. Should actually be in RS...
-    private void generateQRCode() throws IOException
-    {
-        String psk = Base64.getEncoder().encodeToString(PAIRING_KEY);
-        System.out.println("Base64 encoded key: " + psk);
-        QRCodeManager.createQRCodeFile(psk, QR_CODE_TEST_IMAGE_FILE_PATH);
-    }
-
     private byte[] getPairingPSK() throws IOException, InterruptedException
     {
         // Obtain QRCode image from webcam or other source.
@@ -166,7 +124,7 @@ public class Controller
         String skip = scanner.nextLine();
         if(skip.equals("s"))
         {
-            pskBytes = PAIRING_KEY;
+            pskBytes = Controller.PAIRING_KEY;
         }
         else
         {
@@ -177,13 +135,13 @@ public class Controller
                 System.out.println("Getting image... ");
                 Webcam webcam = Webcam.getDefault();
                 webcam.open();
-                ImageIO.write(webcam.getImage(), "JPG", new File(QR_CODE_IMAGE_FILE_PATH));
+                ImageIO.write(webcam.getImage(), "JPG", new File(Controller.QR_CODE_IMAGE_FILE_PATH));
                 webcam.close();
                 System.out.println("Image obtained.");
 
                 try
                 {
-                    String devicePSK = QRCodeManager.readQRCode(QR_CODE_IMAGE_FILE_PATH);
+                    String devicePSK = QRCodeManager.readQRCode(Controller.QR_CODE_IMAGE_FILE_PATH);
                     System.out.println("QR code decoded: " + devicePSK);
                     pskBytes = Base64.getDecoder().decode(devicePSK);
                 }
@@ -210,10 +168,13 @@ public class Controller
 
     private void pair(String server, byte[] psk) throws Exception
     {
-        System.out.println("Started pairing");
-        PairingManager pairingManager = new PairingManager(authorizationServer);
         String asId = Config.data.get("id");
+
+        System.out.println("Started pairing");
+
+        PairingManager pairingManager = new PairingManager(authorizationServer);
         pairingManager.pair(asId, psk, server);
+
         System.out.println("Finished pairing");
     }
 
@@ -306,16 +267,6 @@ public class Controller
         }
     }
 
-    public void removePairedClient(String clientName) throws AceException, IOException
-    {
-        authorizationServer.removeClient(clientName);
-    }
-
-    public void removePairedRS(String rsName) throws AceException, IOException
-    {
-        authorizationServer.removeResourceServer(rsName);
-    }
-
     public void revokeToken() throws AceException
     {
         Map<String, Set<String>> tokensByResourceServer = authorizationServer.getAllTokensByRS();
@@ -352,4 +303,21 @@ public class Controller
             System.out.println("Error revoking token: " + ex.toString());
         }
     }
+
+    public void removePairedClient(Scanner scanner) throws AceException, IOException
+    {
+        System.out.println("");
+        System.out.println("Input client's name/id ");
+        String clientName = scanner.nextLine();
+        authorizationServer.removeClient(clientName);
+    }
+
+    public void removePairedRS(Scanner scanner) throws AceException, IOException
+    {
+        System.out.println("");
+        System.out.println("Input RS's name/id ");
+        String rsName = scanner.nextLine();
+        authorizationServer.removeResourceServer(rsName);
+    }
+
 }

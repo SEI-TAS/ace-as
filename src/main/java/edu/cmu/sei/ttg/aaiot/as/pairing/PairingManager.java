@@ -51,7 +51,7 @@ public class PairingManager
             return;
         }
 
-        // Get and store the device's ID, plus scopes, if it was an IoT Resource Server.
+        // Get and store the device's ID, plus scopes if it was an IoT Resource Server.
         String deviceId = reply.get(PairingResource.DEVICE_ID_KEY).AsString();
         String info = reply.get(PairingResource.DEVICE_INFO_KEY).AsString();
         if(info.equals(""))
