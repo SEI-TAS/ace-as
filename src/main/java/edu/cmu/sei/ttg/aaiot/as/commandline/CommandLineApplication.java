@@ -1,17 +1,19 @@
-package edu.cmu.sei.ttg.aaiot.as;
+package edu.cmu.sei.ttg.aaiot.as.commandline;
+
+import edu.cmu.sei.ttg.aaiot.as.Application;
 
 /**
  * Created by Sebastian on 2017-03-10.
  */
 
-public class Program {
+public class CommandLineApplication
+{
     public static void main(String[] args)
     {
         try
         {
-            Controller controller = new Controller();
-            controller.setup();
-            controller.start();
+            CommandLineUI commandLineUI = new CommandLineUI();
+            commandLineUI.run(Application.getInstance().getAuthorizationServer());
         }
         catch (Exception e)
         {

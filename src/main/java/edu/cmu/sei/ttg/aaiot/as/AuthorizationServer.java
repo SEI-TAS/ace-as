@@ -54,6 +54,11 @@ public class AuthorizationServer implements ICredentialsStore
         tokenDurationInMs = Long.parseLong(Config.data.get("token_duration_in_mins")) * 60 * 1000;
     }
 
+    public String getAsId()
+    {
+        return asId;
+    }
+
     public void createDB(String rootPwd) throws AceException
     {
         //dbAdapter.wipeDB(rootPwd);
@@ -61,7 +66,8 @@ public class AuthorizationServer implements ICredentialsStore
         dbAdapter.createDBAndTables(rootPwd);
     }
 
-    public void connectToDB() throws AceException, IOException, SQLException, CoseException  {
+    public void connectToDB() throws AceException, IOException, SQLException, CoseException
+    {
         dbCon = new CoapDBConnector(dbAdapter, PostgreSQLDBAdapter.DEFAULT_DB_URL, Config.data.get("db_user"), Config.data.get("db_pwd"));
 
         this.pdp = new KissPDP(Config.data.get("root_db_pwd"), dbCon);

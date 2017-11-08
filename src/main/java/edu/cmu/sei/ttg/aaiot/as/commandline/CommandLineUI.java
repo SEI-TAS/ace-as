@@ -1,7 +1,9 @@
-package edu.cmu.sei.ttg.aaiot.as;
+package edu.cmu.sei.ttg.aaiot.as.commandline;
 
 import com.github.sarxos.webcam.Webcam;
 import com.google.zxing.NotFoundException;
+import edu.cmu.sei.ttg.aaiot.as.AuthorizationServer;
+import edu.cmu.sei.ttg.aaiot.as.Application;
 import edu.cmu.sei.ttg.aaiot.as.pairing.PairingManager;
 import edu.cmu.sei.ttg.aaiot.as.pairing.QRCodeManager;
 import edu.cmu.sei.ttg.aaiot.config.Config;
@@ -54,14 +56,14 @@ public class CommandLineUI
                 {
                     case 'c':
                         System.out.println("");
-                        System.out.println("Input client's IP, or (Enter) to use default (" + Controller.DEFAULT_CLIENT_IP + "): ");
+                        System.out.println("Input client's IP, or (Enter) to use default (" + Application.DEFAULT_CLIENT_IP + "): ");
                         String ip = scanner.nextLine();
                         if (ip.equals(""))
                         {
-                            ip = Controller.DEFAULT_CLIENT_IP;
+                            ip = Application.DEFAULT_CLIENT_IP;
                         }
 
-                        pair(ip, Controller.CLIENT_PAIRING_KEY);
+                        pair(ip, Application.CLIENT_PAIRING_KEY);
 
                         System.out.println("Finished pairing procedure!");
                         break;
@@ -74,11 +76,11 @@ public class CommandLineUI
                         }
 
                         System.out.println("");
-                        System.out.println("Input devices's IP, or (Enter) to use default (" + Controller.DEFAULT_DEVICE_IP + "): ");
+                        System.out.println("Input devices's IP, or (Enter) to use default (" + Application.DEFAULT_DEVICE_IP + "): ");
                         String device_ip = scanner.nextLine();
                         if (device_ip.equals(""))
                         {
-                            device_ip = Controller.DEFAULT_DEVICE_IP;
+                            device_ip = Application.DEFAULT_DEVICE_IP;
                         }
 
                         pair(device_ip, psk);
@@ -124,7 +126,7 @@ public class CommandLineUI
         String skip = scanner.nextLine();
         if(skip.equals("s"))
         {
-            pskBytes = Controller.PAIRING_KEY;
+            pskBytes = Application.DEFAULT_DEVICE_PAIRING_KEY;
         }
         else
         {
@@ -135,13 +137,13 @@ public class CommandLineUI
                 System.out.println("Getting image... ");
                 Webcam webcam = Webcam.getDefault();
                 webcam.open();
-                ImageIO.write(webcam.getImage(), "JPG", new File(Controller.QR_CODE_IMAGE_FILE_PATH));
+                ImageIO.write(webcam.getImage(), "JPG", new File(Application.QR_CODE_IMAGE_FILE_PATH));
                 webcam.close();
                 System.out.println("Image obtained.");
 
                 try
                 {
-                    String devicePSK = QRCodeManager.readQRCode(Controller.QR_CODE_IMAGE_FILE_PATH);
+                    String devicePSK = QRCodeManager.readQRCode(Application.QR_CODE_IMAGE_FILE_PATH);
                     System.out.println("QR code decoded: " + devicePSK);
                     pskBytes = Base64.getDecoder().decode(devicePSK);
                 }

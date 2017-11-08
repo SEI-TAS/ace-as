@@ -5,19 +5,23 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.cell.PropertyValueFactory?>
-
 <GridPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
-          fx:controller="edu.cmu.sei.ttg.aaiot.as.gui.controllers.ClientsController"
+          fx:controller="edu.cmu.sei.ttg.aaiot.as.gui.controllers.IoTDevicesController"
           alignment="TOP_LEFT" hgap="10" vgap="10">
     <padding>
         <Insets bottom="10.0" left="10.0" right="10.0" top="10.0"/>
     </padding>
-    <Button text="Pair New Client" onAction="#pairClient" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
-    <TableView fx:id="clientsTableView" GridPane.columnIndex="0" GridPane.rowIndex="2">
+    <Button text="Pair New IoT Device" onAction="#pairIoTDevice" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+    <TableView fx:id="devicesTableView" GridPane.columnIndex="0" GridPane.rowIndex="2">
         <columns>
-            <TableColumn text="ID" prefWidth="160">
+            <TableColumn text="ID" prefWidth="120">
                 <cellValueFactory>
                     <PropertyValueFactory property="id" />
+                </cellValueFactory>
+            </TableColumn>
+            <TableColumn text="Scopes">
+                <cellValueFactory>
+                    <PropertyValueFactory property="scopes" />
                 </cellValueFactory>
             </TableColumn>
             <TableColumn text="Actions">
