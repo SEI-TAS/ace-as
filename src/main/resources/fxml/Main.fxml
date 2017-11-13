@@ -5,6 +5,7 @@
 <TabPane xmlns="http://javafx.com/javafx"
          xmlns:fx="http://javafx.com/fxml"
          fx:controller="edu.cmu.sei.ttg.aaiot.as.gui.controllers.MainController"
+         fx:id="tabPane"
          prefHeight="400.0" prefWidth="1000.0">
     <tabs>
         <Tab text="Paired Clients" closable="false">
@@ -17,7 +18,7 @@
                 <fx:include fx:id="devicesTabPage" source="IoTDevices.fxml"/>
             </content>
         </Tab>
-        <Tab text="Tokens" closable="false">
+        <Tab text="Tokens" closable="false" fx:id="tokensTab">
             <content>
                 <fx:include fx:id="tokensTabPage" source="Tokens.fxml"/>
             </content>

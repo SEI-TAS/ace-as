@@ -25,7 +25,7 @@ public class PairingManager
         this.credentialsStore = credentialsStore;
     }
 
-    public void pair(String asID, byte[] pairingKey, String deviceIp) throws Exception
+    public boolean pair(String asID, byte[] pairingKey, String deviceIp) throws Exception
     {
         // Generate a new, random AES-128 key.
         byte[] keyBytes = new byte[16];
@@ -48,7 +48,7 @@ public class PairingManager
         {
             System.out.println("Aborting pairing procedure, device did not respond.");
             coapClient.stop();
-            return;
+            return false;
         }
 
         // Get and store the device's ID, plus scopes if it was an IoT Resource Server.
@@ -72,5 +72,7 @@ public class PairingManager
 
         // End pairing connection.
         coapClient.stop();
+
+        return true;
     }
 }

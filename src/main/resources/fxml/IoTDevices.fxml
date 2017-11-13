@@ -7,24 +7,27 @@
 <?import javafx.scene.control.cell.PropertyValueFactory?>
 <GridPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
           fx:controller="edu.cmu.sei.ttg.aaiot.as.gui.controllers.IoTDevicesController"
-          alignment="TOP_LEFT" hgap="10" vgap="10">
+          alignment="TOP_LEFT" hgap="10" vgap="10"
+          fx:id="gridPane">
     <padding>
         <Insets bottom="10.0" left="10.0" right="10.0" top="10.0"/>
     </padding>
-    <Button text="Pair New IoT Device" onAction="#pairIoTDevice" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
-    <TableView fx:id="devicesTableView" GridPane.columnIndex="0" GridPane.rowIndex="2">
+    <Button text="Pair New IoT Device" onAction="#startCamera" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+    <TableView fx:id="devicesTableView" GridPane.columnIndex="0" GridPane.rowIndex="2"
+               GridPane.vgrow="ALWAYS">
+        <columnResizePolicy><TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/></columnResizePolicy>
         <columns>
             <TableColumn text="ID" prefWidth="120">
                 <cellValueFactory>
                     <PropertyValueFactory property="id" />
                 </cellValueFactory>
             </TableColumn>
-            <TableColumn text="Scopes">
+            <TableColumn text="Scopes" prefWidth="180">
                 <cellValueFactory>
                     <PropertyValueFactory property="scopes" />
                 </cellValueFactory>
             </TableColumn>
-            <TableColumn text="Actions">
+            <TableColumn text="" prefWidth="110">
             </TableColumn>
         </columns>
     </TableView>

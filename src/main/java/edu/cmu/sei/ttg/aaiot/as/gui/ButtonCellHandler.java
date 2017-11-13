@@ -24,6 +24,7 @@ public class ButtonCellHandler<T>
         // Set up the actions column.
         TableColumn actionColumn = tableView.getColumns().get(actionsColumnIndex);
         actionColumn.setCellFactory(p -> new ButtonCell(buttonText));
+        actionColumn.setStyle( "-fx-alignment: CENTER;");
     }
 
     /**
@@ -43,13 +44,14 @@ public class ButtonCellHandler<T>
         catch(Exception e)
         {
             System.out.println("Error executing action: " + e.toString());
+            e.printStackTrace();
         }
     }
 
     /**
      * The class that models a cell with a button.
      */
-    class ButtonCell<T, Boolean> extends TableCell<T, Boolean>
+    class ButtonCell<T, S> extends TableCell<T, S>
     {
         final Button actionButton;
 
@@ -58,20 +60,24 @@ public class ButtonCellHandler<T>
             actionButton = new Button(buttonText);
             actionButton.setOnAction(actionEvent ->
             {
-                // Select current row so that handler can indentify the row.
+                // Select current row so that handler can identify the row.
                 ButtonCell.this.getTableView().getSelectionModel().select(ButtonCell.this.getTableRow().getIndex());
                 ButtonCellHandler.this.executeAction(actionEvent);
             });
         }
 
         @Override
-        protected void updateItem(Boolean item, boolean empty)
+        protected void updateItem(S item, boolean empty)
         {
             // Show button only for non-empty rows.
             super.updateItem(item, empty);
             if(!empty)
             {
                 setGraphic(actionButton);
+            }
+            else
+            {
+                setGraphic(null);
             }
         }
     }

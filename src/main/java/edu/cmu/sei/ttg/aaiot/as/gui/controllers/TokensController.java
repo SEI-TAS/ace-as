@@ -39,14 +39,14 @@ public class TokensController
                     tokensTableView.getItems().remove(selectedToken);
                 });
 
-        fillClientsTable();
+        fillTable();
     }
 
     /**
      * Updates the data in the table with the current data in the DB.
      * @throws Exception
      */
-    private void fillClientsTable() throws Exception
+    public void fillTable() throws Exception
     {
         ObservableList<Token> tokensTableData = tokensTableView.getItems();
         tokensTableData.clear();

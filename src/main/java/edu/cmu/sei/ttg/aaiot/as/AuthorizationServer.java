@@ -84,6 +84,11 @@ public class AuthorizationServer implements ICredentialsStore
         return dbCon.getRSS();
     }
 
+    public Set<String> getScopes(String rsId) throws AceException
+    {
+        return dbCon.getScopes(rsId);
+    }
+
     public Map<String, Set<String>> getRules(String clientId) throws AceException
     {
         return pdp.getAllAccess(clientId);
@@ -227,7 +232,6 @@ public class AuthorizationServer implements ICredentialsStore
         for(String tokenId : tokenIds)
         {
             Map<Short, CBORObject> claims = dbCon.getClaims(tokenId);
-            System.out.println(claims);
             CBORObject rsNameCBOR = claims.get(Constants.AUD);
             if(rsNameCBOR != null)
             {
