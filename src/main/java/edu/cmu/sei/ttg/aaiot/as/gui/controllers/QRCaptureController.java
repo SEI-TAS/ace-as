@@ -4,6 +4,8 @@ import com.github.sarxos.webcam.Webcam;
 import com.google.zxing.NotFoundException;
 import edu.cmu.sei.ttg.aaiot.as.Application;
 import edu.cmu.sei.ttg.aaiot.as.AuthorizationServer;
+import edu.cmu.sei.ttg.aaiot.as.gui.ITaskExecution;
+import edu.cmu.sei.ttg.aaiot.as.gui.TaskThread;
 import edu.cmu.sei.ttg.aaiot.as.pairing.PairingManager;
 import edu.cmu.sei.ttg.aaiot.as.pairing.QRCodeManager;
 import javafx.application.Platform;
@@ -39,84 +41,89 @@ public class QRCaptureController
 
     private boolean stopReadingQR;
 
+    /**
+     * Initializes the component, setting up threads for the webcam and QR processing.
+     */
     @FXML
     public void initialize()
     {
-        initializeWebCam();
-    }
-
-    /**
-     * Opens the webcam in a separate thread.
-     */
-    protected void initializeWebCam()
-    {
-        Task<Void> webCamIntializer = new Task<Void>()
+        // Start webcome initialization in a task thread,.
+        new TaskThread(() ->
         {
-            @Override
-            protected Void call() throws Exception
+            try
             {
+                // Open the webcam.
                 if (webcam != null)
                 {
                     webcam.close();
                 }
-
                 webcam = Webcam.getDefault();
                 webcam.open();
 
+                // Set up the camera stream.
                 startWebCamStreamThread();
                 System.out.println("Finished webcam setup");
+
+                // Set up the QR processing thread.
                 startGetQRAndPairThread();
-                return null;
             }
-        };
-        new Thread(webCamIntializer).start();
+            catch (Exception e)
+            {
+                System.out.println("Error setting up camera: " + e.toString());
+                Platform.runLater(() -> new Alert(Alert.AlertType.ERROR, "Error setting up camera: " + e.toString()).showAndWait());
+            }
+        }).start();
     }
 
+    /**
+     * Thread were webcam data is streamed into FX control.
+     */
     public void startWebCamStreamThread()
     {
         stopCamera = false;
-        Task<Void> task = new Task<Void>()
+        new TaskThread(() ->
         {
-            @Override
-            protected Void call() throws Exception
+            System.out.println("Started webcam stream");
+            while (!stopCamera)
             {
-                System.out.println("Started webcam stream");
-                while (!stopCamera)
+                try
                 {
-                    try
+                    if ((grabbedImage = webcam.getImage()) != null)
                     {
-                        if ((grabbedImage = webcam.getImage()) != null)
+                        Platform.runLater(() ->
                         {
-                            Platform.runLater(() ->
-                            {
-                                final Image currentImage = SwingFXUtils.toFXImage(grabbedImage, null);
-                                imageProperty.set(currentImage);
-                            });
+                            // Convert the image and set it in the FX control.
+                            final Image currentImage = SwingFXUtils.toFXImage(grabbedImage, null);
+                            imageProperty.set(currentImage);
+                        });
 
-                            //grabbedImage.flush();
-
-                            Thread.sleep(100);
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        e.printStackTrace();
+                        // Small sleep to reduce load and allow QR processor to run in parallel.
+                        Thread.sleep(100);
                     }
                 }
-
-                grabbedImage.flush();
-                System.out.println("Finished webcam stream");
-                return null;
+                catch (Exception e)
+                {
+                    System.out.println("Error capturing camera image; ignoring.");
+                    e.printStackTrace();
+                }
             }
-        };
 
-        Thread th = new Thread(task);
-        th.start();
+            if(grabbedImage != null)
+            {
+                grabbedImage.flush();
+            }
 
+            System.out.println("Finished webcam stream.");
+        }).start();
+
+        // Associate the FX control to the property manually.
         imgWebCamCapturedImage.imageProperty().bind(imageProperty);
     }
 
-    public void stopWebCamStream()
+    /**
+     * Used to stop the webcam stream thread.
+     */
+    public void stopWebCamStreamThread()
     {
         stopCamera = true;
         if(webcam != null)
@@ -125,11 +132,14 @@ public class QRCaptureController
         }
     }
 
+    /**
+     * Overall cleanup method for all threads and components.
+     */
     public void cleanup()
     {
         System.out.println("Starting cleanup");
         stopReadingQR = true;
-        stopWebCamStream();
+        stopWebCamStreamThread();
         System.out.println("Finished cleanup");
     }
 
@@ -139,65 +149,55 @@ public class QRCaptureController
     public void startGetQRAndPairThread()
     {
         stopReadingQR = false;
-        Task<Void> task = new Task<Void>()
+        new TaskThread(() ->
         {
-            @Override
-            protected Void call() throws Exception
+            try
             {
-                try
+                System.out.println("Starting QR detection loop");
+                while(!stopReadingQR)
                 {
-                    System.out.println("Starting QR detection loop");
-                    while(!stopReadingQR)
+                    byte[] pskBytes = null;
+                    if(grabbedImage != null)
                     {
-                        byte[] pskBytes = null;
-                        if(grabbedImage != null)
-                        {
-                            System.out.println("Attempting to detect QR code");
-                            ImageIO.write(grabbedImage, "JPG", new File(Application.QR_CODE_IMAGE_FILE_PATH));
-                            System.out.println("Code written to image");
-                            pskBytes = getQRBytes(Application.QR_CODE_IMAGE_FILE_PATH);
-                        }
+                        System.out.println("Attempting to detect QR code");
+                        ImageIO.write(grabbedImage, "JPG", new File(Application.QR_CODE_IMAGE_FILE_PATH));
+                        pskBytes = getQRBytes(Application.QR_CODE_IMAGE_FILE_PATH);
+                    }
 
-                        if (pskBytes != null)
-                        {
-                            // Perform pairing.
-                            pairIoTDevice(pskBytes);
+                    if (pskBytes != null)
+                    {
+                        // Perform pairing.
+                        pairIoTDevice(pskBytes);
 
-                            stopReadingQR = true;
+                        stopReadingQR = true;
 
-                            // Whether it was successful or not, close the window.
-                            Platform.runLater(() ->
-                            {
-                                Stage currStage = (Stage) imgWebCamCapturedImage.getScene().getWindow();
-                                currStage.fireEvent(
-                                        new WindowEvent(
-                                                currStage,
-                                                WindowEvent.WINDOW_CLOSE_REQUEST
-                                        )
-                                );
-                            });
-                        }
-                        else
+                        // Whether it was successful or not, close the window.
+                        Platform.runLater(() ->
                         {
-                            System.out.println("Waiting for a bit...");
-                            Thread.sleep(1000);
-                        }
+                            Stage currStage = (Stage) imgWebCamCapturedImage.getScene().getWindow();
+                            currStage.fireEvent(
+                                    new WindowEvent(
+                                            currStage,
+                                            WindowEvent.WINDOW_CLOSE_REQUEST
+                                    )
+                            );
+                        });
+                    }
+                    else
+                    {
+                        // Sleep to allow user to move QR image so that it will be better captured.
+                        System.out.println("Waiting for a bit...");
+                        Thread.sleep(1000);
                     }
                 }
-                catch(Exception e)
-                {
-                    System.out.println("Error processing QR code: " + e.toString());
-                    e.printStackTrace();
-                    new Alert(Alert.AlertType.ERROR, "Error processing QR code: " + e.toString()).showAndWait();
-                }
-
-                return null;
             }
-        };
-
-        System.out.println("Starting QR detection");
-        Thread th = new Thread(task);
-        th.start();
+            catch(Exception e)
+            {
+                System.out.println("Error processing QR code: " + e.toString());
+                e.printStackTrace();
+                Platform.runLater(() -> new Alert(Alert.AlertType.ERROR, "Error processing QR code: " + e.toString()).showAndWait());
+            }
+        }).start();
     }
 
     /**
@@ -237,7 +237,7 @@ public class QRCaptureController
             boolean success = pairingManager.pair(asId, pskBytes, Application.DEFAULT_DEVICE_IP);
             if(success)
             {
-                Platform.runLater(() -> { new Alert(Alert.AlertType.INFORMATION, "Paired completed successfully.").showAndWait();});
+                Platform.runLater(() -> new Alert(Alert.AlertType.INFORMATION, "Paired completed successfully.").showAndWait());
                 System.out.println("Finished pairing");
             }
             else
@@ -250,7 +250,7 @@ public class QRCaptureController
         catch(Exception e)
         {
             System.out.println("Error pairing: " + e.toString());
-            Platform.runLater(() -> { new Alert(Alert.AlertType.ERROR, "Error during pairing: " + e.toString()).showAndWait();});
+            Platform.runLater(() -> new Alert(Alert.AlertType.ERROR, "Error during pairing: " + e.toString()).showAndWait());
             return false;
         }
     }
