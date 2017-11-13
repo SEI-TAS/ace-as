@@ -10,8 +10,8 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
 import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -26,11 +26,9 @@ public class IoTDevicesController
     private AuthorizationServer authorizationServer;
     private ButtonCellHandler<Device> removeButtonHandler;
 
-    @FXML
-    private TableView<Device> devicesTableView;
-
-    @FXML
-    private GridPane gridPane;
+    @FXML private TableView<Device> devicesTableView;
+    @FXML private GridPane gridPane;
+    @FXML private TextField deviceIpTextField;
 
     /**
      * Sets up the view.
@@ -93,8 +91,13 @@ public class IoTDevicesController
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/QRCapture.fxml"));
             Parent pane = loader.load();
 
-            // Set up the window.
+            // Set up the IP address of the device.
+            String deviceIpAddress = deviceIpTextField.getText();
             QRCaptureController controller = loader.getController();
+            controller.setIpAddress(deviceIpAddress);
+
+            // Set up the window.
+
             Stage dialog = new Stage();
             dialog.setTitle("Scanning QR Code");
             dialog.setScene(new Scene(pane, 500, 500));

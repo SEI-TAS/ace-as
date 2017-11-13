@@ -4,14 +4,12 @@ import com.github.sarxos.webcam.Webcam;
 import com.google.zxing.NotFoundException;
 import edu.cmu.sei.ttg.aaiot.as.Application;
 import edu.cmu.sei.ttg.aaiot.as.AuthorizationServer;
-import edu.cmu.sei.ttg.aaiot.as.gui.ITaskExecution;
 import edu.cmu.sei.ttg.aaiot.as.gui.TaskThread;
 import edu.cmu.sei.ttg.aaiot.as.pairing.PairingManager;
 import edu.cmu.sei.ttg.aaiot.as.pairing.QRCodeManager;
 import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.concurrent.Task;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
@@ -31,15 +29,16 @@ import java.util.Base64;
  */
 public class QRCaptureController
 {
-    @FXML
-    ImageView imgWebCamCapturedImage;
+    @FXML ImageView imgWebCamCapturedImage;
 
     private Webcam webcam;
     private BufferedImage grabbedImage;
-    private boolean stopCamera;
     private ObjectProperty<Image> imageProperty = new SimpleObjectProperty<>();
 
+    private boolean stopCamera;
     private boolean stopReadingQR;
+
+    private String ipAddress;
 
     /**
      * Initializes the component, setting up threads for the webcam and QR processing.
@@ -73,6 +72,15 @@ public class QRCaptureController
                 Platform.runLater(() -> new Alert(Alert.AlertType.ERROR, "Error setting up camera: " + e.toString()).showAndWait());
             }
         }).start();
+    }
+
+    /**
+     * Sets the IP address of the device to pair.
+     * @param ipAddress
+     */
+    public void setIpAddress(String ipAddress)
+    {
+        this.ipAddress = ipAddress;
     }
 
     /**
@@ -234,7 +242,7 @@ public class QRCaptureController
             AuthorizationServer authorizationServer = Application.getInstance().getAuthorizationServer();
             String asId = authorizationServer.getAsId();
             PairingManager pairingManager = new PairingManager(authorizationServer);
-            boolean success = pairingManager.pair(asId, pskBytes, Application.DEFAULT_DEVICE_IP);
+            boolean success = pairingManager.pair(asId, pskBytes, ipAddress);
             if(success)
             {
                 Platform.runLater(() -> new Alert(Alert.AlertType.INFORMATION, "Paired completed successfully.").showAndWait());
