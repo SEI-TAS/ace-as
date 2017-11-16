@@ -4,7 +4,7 @@ import com.github.sarxos.webcam.Webcam;
 import com.google.zxing.NotFoundException;
 import edu.cmu.sei.ttg.aaiot.as.Application;
 import edu.cmu.sei.ttg.aaiot.as.AuthorizationServer;
-import edu.cmu.sei.ttg.aaiot.as.gui.TaskThread;
+import edu.cmu.sei.ttg.aaiot.threads.TaskThread;
 import edu.cmu.sei.ttg.aaiot.as.pairing.PairingManager;
 import edu.cmu.sei.ttg.aaiot.as.pairing.QRCodeManager;
 import javafx.application.Platform;
