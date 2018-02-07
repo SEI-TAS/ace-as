@@ -1,11 +1,13 @@
 Manifest-Version: 1.0
-Class-Path: libs/jcommander-1.48.jar libs/ace-0.0.1-SNAPSHOT.jar libs/json-20160810.j
- ar libs/californium-core-1.0.5.jar libs/slf4j-api-1.7.2.jar libs/org.wso2.balana-1.0
- .1.jar libs/cose-java-0.9.6.jar libs/core-3.3.0.jar libs/postgresql-9.3-1104-jdbc4.j
- ar libs/core-2.3.0.jar libs/bcpkix-jdk15on-1.54.jar libs/commons-logging-1.1.1.jar
- libs/aaiot-lib-0.0.1-SNAPSHOT.jar libs/element-connector-1.0.5.jar libs/javase-3.3.0.
- jar libs/scandium-1.0.5.jar libs/jai-imageio-core-1.3.1.jar libs/bcprov-jdk15on-1.54
- .jar libs/cbor-2.4.1.jar libs/webcam-capture-0.3.11.jar libs/mysql-connector-java-5.
- 1.30.jar libs/javase-2.3.0.jar libs/numbers-0.3.0.jar libs/bridj-0.7.0.jar
+Class-Path: libs/jcommander-1.48.jar libs/ace-0.0.1-SNAPSHOT.jar libs/
+ json-20160810.jar libs/californium-core-1.0.5.jar libs/slf4j-api-1.7.
+ 2.jar libs/org.wso2.balana-1.0.1.jar libs/cose-java-0.9.6.jar libs/co
+ re-3.3.0.jar libs/postgresql-9.3-1104-jdbc4.jar libs/core-2.3.0.jar l
+ ibs/bcpkix-jdk15on-1.54.jar libs/commons-logging-1.1.1.jar libs/aaiot
+ -lib-0.0.1-SNAPSHOT.jar libs/element-connector-1.0.5.jar libs/javase-
+ 3.3.0.jar libs/scandium-1.0.5.jar libs/jai-imageio-core-1.3.1.jar lib
+ s/bcprov-jdk15on-1.54.jar libs/cbor-2.4.1.jar libs/webcam-capture-0.3
+ .11.jar libs/mysql-connector-java-5.1.30.jar libs/javase-2.3.0.jar li
+ bs/numbers-0.3.0.jar libs/bridj-0.7.0.jar
 Main-Class: edu.cmu.sei.ttg.aaiot.as.gui.FXApplication
 
