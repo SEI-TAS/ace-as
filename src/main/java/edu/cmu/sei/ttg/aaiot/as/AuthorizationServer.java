@@ -68,8 +68,8 @@ public class AuthorizationServer implements ICredentialsStore
 
     public void connectToDB() throws AceException, IOException, SQLException, CoseException
     {
-        dbCon = new CoapDBConnector(dbAdapter, PostgreSQLDBAdapter.DEFAULT_DB_URL, Config.data.get("db_user"), Config.data.get("db_pwd"));
-
+        dbCon = CoapDBConnector.getInstance(dbAdapter, PostgreSQLDBAdapter.DEFAULT_DB_URL,
+                                            Config.data.get("db_user"), Config.data.get("db_pwd"));
         this.pdp = new KissPDP(Config.data.get("root_db_pwd"), dbCon);
         coapServer = new CoapsAS(asId, dbCon, pdp, timeProvider, null);
     }
@@ -134,7 +134,7 @@ public class AuthorizationServer implements ICredentialsStore
     public void addClient(String clientName, OneKey PSK) throws AceException, COSE.CoseException
     {
         dbCon.addClient(clientName, supportedProfiles, null, null, supportedKeyTypes, PSK,
-                null, false);
+                null);
 
         // Authorize new client to ask for tokens and introspect.
         pdp.addTokenAccess(clientName);
