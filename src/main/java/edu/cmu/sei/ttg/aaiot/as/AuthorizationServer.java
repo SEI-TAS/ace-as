@@ -10,6 +10,7 @@ import se.sics.ace.Constants;
 import se.sics.ace.TimeProvider;
 import se.sics.ace.as.AccessTokenFactory;
 import se.sics.ace.as.DBConnector;
+import se.sics.ace.as.PDP;
 import se.sics.ace.coap.as.CoapDBConnector;
 import se.sics.ace.coap.as.CoapsAS;
 import se.sics.ace.examples.KissPDP;
@@ -115,7 +116,7 @@ public class AuthorizationServer implements ICredentialsStore
                 resouceServerKnownExpiration, PSK, null);
 
         // Authorize RS to introspect.
-        pdp.addIntrospectAccess(rsName);
+        pdp.addIntrospectAccess(rsName, PDP.IntrospectAccessLevel.ACTIVE_ONLY);
     }
 
     public void removeResourceServer(String rsName) throws AceException, IOException
@@ -138,7 +139,7 @@ public class AuthorizationServer implements ICredentialsStore
 
         // Authorize new client to ask for tokens and introspect.
         pdp.addTokenAccess(clientName);
-        pdp.addIntrospectAccess(clientName);
+        pdp.addIntrospectAccess(clientName, PDP.IntrospectAccessLevel.ACTIVE_ONLY);
     }
 
     public void removeClient(String clientName) throws AceException, IOException
@@ -203,7 +204,7 @@ public class AuthorizationServer implements ICredentialsStore
 
     public void wipeData(String rootPwd) throws IOException, AceException
     {
-        this.dbAdapter.wipeDB(rootPwd);
+        this.dbAdapter.wipeDB(rootPwd, Config.data.get("db_user"));
     }
 
     private OneKey createOneKeyFromBytes(byte[] rawKey) throws COSE.CoseException
