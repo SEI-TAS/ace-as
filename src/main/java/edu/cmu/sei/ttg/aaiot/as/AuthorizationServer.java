@@ -26,6 +26,8 @@ import java.util.*;
  */
 public class AuthorizationServer implements ICredentialsStore
 {
+    private static final String AAIOT_ACE_DB_NAME = "aaiotacedb";
+
     private String asId;
     private long tokenDurationInMs;
 
@@ -40,7 +42,8 @@ public class AuthorizationServer implements ICredentialsStore
     private TimeProvider timeProvider;
     private KissPDP pdp;
 
-    public AuthorizationServer(String asId) throws AceException, IOException, CoseException {
+    public AuthorizationServer(String asId)
+    {
         this.asId = asId;
         supportedProfiles.add("coap_dtls");
         supportedKeyTypes.add("PSK");
@@ -50,7 +53,7 @@ public class AuthorizationServer implements ICredentialsStore
         timeProvider = new KissTime();
 
         dbAdapter = new PostgreSQLDBAdapter();
-        dbAdapter.setParams(Config.data.get("db_user"), Config.data.get("db_pwd"), DBConnector.dbName, null);
+        dbAdapter.setParams(Config.data.get("db_user"), Config.data.get("db_pwd"), AAIOT_ACE_DB_NAME, null);
 
         tokenDurationInMs = Long.parseLong(Config.data.get("token_duration_in_mins")) * 60 * 1000;
     }
@@ -69,9 +72,8 @@ public class AuthorizationServer implements ICredentialsStore
 
     public void connectToDB() throws AceException, IOException, SQLException, CoseException
     {
-        dbCon = CoapDBConnector.getInstance(dbAdapter, PostgreSQLDBAdapter.DEFAULT_DB_URL,
-                                            Config.data.get("db_user"), Config.data.get("db_pwd"));
-        this.pdp = new KissPDP(Config.data.get("root_db_pwd"), dbCon);
+        dbCon = CoapDBConnector.getInstance(dbAdapter);
+        this.pdp = new KissPDP(dbCon);
         coapServer = new CoapsAS(asId, dbCon, pdp, timeProvider, null);
     }
 
@@ -95,18 +97,18 @@ public class AuthorizationServer implements ICredentialsStore
         return pdp.getAllAccess(clientId);
     }
 
-    public void addRule(String clientId, String rsId, String scope) throws IOException, AceException
+    public void addRule(String clientId, String rsId, String scope) throws AceException
     {
         pdp.addAccess(clientId, rsId, scope);
     }
 
-    public void removeRule(String clientId, String rsId, String scope) throws IOException, AceException
+    public void removeRule(String clientId, String rsId, String scope) throws AceException
     {
         pdp.revokeAccess(clientId, rsId, scope);
     }
 
     // This should be the result of the pairing procedure, adding a RS along with the shared key to use with it.
-    public void addResourceServer(String rsName, OneKey PSK, Set<String> scopes) throws AceException, COSE.CoseException {
+    public void addResourceServer(String rsName, OneKey PSK, Set<String> scopes) throws AceException {
         Set<String> auds = new HashSet<>();
         auds.add(rsName);
 
@@ -119,7 +121,7 @@ public class AuthorizationServer implements ICredentialsStore
         pdp.addIntrospectAccess(rsName, PDP.IntrospectAccessLevel.ACTIVE_ONLY);
     }
 
-    public void removeResourceServer(String rsName) throws AceException, IOException
+    public void removeResourceServer(String rsName) throws AceException
     {
         System.out.println("Removing resource server if it was there.");
         dbCon.deleteRS(rsName);
@@ -132,7 +134,7 @@ public class AuthorizationServer implements ICredentialsStore
     }
 
     // This should be the result of the pairing procedure, adding a client along with the shared key to use with it.
-    public void addClient(String clientName, OneKey PSK) throws AceException, COSE.CoseException
+    public void addClient(String clientName, OneKey PSK) throws AceException
     {
         dbCon.addClient(clientName, supportedProfiles, null, null, supportedKeyTypes, PSK,
                 null);
@@ -142,7 +144,7 @@ public class AuthorizationServer implements ICredentialsStore
         pdp.addIntrospectAccess(clientName, PDP.IntrospectAccessLevel.ACTIVE_ONLY);
     }
 
-    public void removeClient(String clientName) throws AceException, IOException
+    public void removeClient(String clientName) throws AceException
     {
         System.out.println("Removing client if it was there.");
         dbCon.deleteClient(clientName);
@@ -202,9 +204,9 @@ public class AuthorizationServer implements ICredentialsStore
         }
     }
 
-    public void wipeData(String rootPwd) throws IOException, AceException
+    public void wipeData(String rootPwd) throws AceException
     {
-        this.dbAdapter.wipeDB(rootPwd, Config.data.get("db_user"));
+        this.dbAdapter.wipeDB(rootPwd);
     }
 
     private OneKey createOneKeyFromBytes(byte[] rawKey) throws COSE.CoseException
