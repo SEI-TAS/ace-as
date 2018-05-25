@@ -4,6 +4,7 @@ import COSE.*;
 import com.upokecenter.cbor.CBORObject;
 import edu.cmu.sei.ttg.aaiot.as.pairing.ICredentialsStore;
 import edu.cmu.sei.ttg.aaiot.config.Config;
+import org.eclipse.californium.core.coap.CoAP;
 import se.sics.ace.AceException;
 import se.sics.ace.COSEparams;
 import se.sics.ace.Constants;
@@ -74,7 +75,8 @@ public class AuthorizationServer implements ICredentialsStore
     {
         dbCon = CoapDBConnector.getInstance(dbAdapter);
         this.pdp = new KissPDP(dbCon);
-        coapServer = new CoapsAS(asId, dbCon, pdp, timeProvider, null);
+        coapServer = new CoapsAS(asId, dbCon, pdp, timeProvider, null, "token",
+                "introspect", CoAP.DEFAULT_COAP_SECURE_PORT, null, true);
     }
 
     public Set<String> getClients() throws AceException
