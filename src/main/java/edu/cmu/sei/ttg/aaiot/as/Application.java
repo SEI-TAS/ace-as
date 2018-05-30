@@ -31,7 +31,10 @@ import edu.cmu.sei.ttg.aaiot.as.pairing.QRCodeManager;
 import edu.cmu.sei.ttg.aaiot.config.Config;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.util.Base64;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Created by sebastianecheverria on 7/18/17.
@@ -42,6 +45,15 @@ public class Application
 
     // We do not need to know this, we just have it hear to simplify tests.
     public static final byte[] DEFAULT_DEVICE_PAIRING_KEY = {'a', 'b', 'c', 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
+
+    private static final byte[] TEST_RS1_KEY = {(byte) 0xa1, (byte) 0xa2, (byte) 0xa3, 0x04, 0x05, 0x06, 0x07, 0x08,
+            0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10};
+    private static final byte[] TEST_RS2_KEY = {(byte) 0xb1, (byte) 0xb2, (byte) 0xb3, 0x04, 0x05, 0x06, 0x07, 0x08,
+            0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10};
+    private static final byte[] TEST_CLIENT1_KEY = {0x61, 0x62, 0x63, 0x04, 0x05, 0x06, 0x07, 0x08,
+    0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10};
+    private static final byte[] TEST_CLIENT2_KEY = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
+            0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10};
 
     private static final String CONFIG_FILE = "config.json";
 
@@ -83,6 +95,16 @@ public class Application
         // Start the server.
         authorizationServer.connectToDB();
         authorizationServer.start();
+
+        // TODO: For testing purposes only:
+        /*authorizationServer.storeClient("client1", TEST_CLIENT1_KEY);
+        authorizationServer.storeClient("client2", TEST_CLIENT2_KEY);
+        Set<String> scopes = new HashSet();
+        scopes.add("HelloWorld");
+        scopes.add("r_Lock");
+        scopes.add("rw_Lock");
+        authorizationServer.storeRS("RS1", TEST_RS1_KEY, scopes);
+        authorizationServer.storeRS("RS2", TEST_RS2_KEY, scopes);*/
     }
 
     /**

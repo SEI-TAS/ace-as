@@ -220,7 +220,7 @@ public class AuthorizationServer implements ICredentialsStore
     {
         if(coapServer != null)
         {
-            System.out.println("Starting server");
+            System.out.println("Starting AS server");
             coapServer.start();
         }
     }
