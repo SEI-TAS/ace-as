@@ -144,7 +144,7 @@ public class AuthorizationServer implements ICredentialsStore
         long resouceServerKnownExpiration = tokenDurationInMs;
 
         dbCon.addRS(rsName, supportedProfiles, scopes, auds, supportedKeyTypes, supportedTokenTypes, supportedCOSEParams,
-                resouceServerKnownExpiration, PSK, null);
+                resouceServerKnownExpiration, PSK, PSK,null);
 
         // Authorize RS to introspect.
         pdp.addIntrospectAccess(rsName, PDP.IntrospectAccessLevel.ACTIVE_ONLY);
