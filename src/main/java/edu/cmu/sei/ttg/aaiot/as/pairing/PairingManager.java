@@ -58,7 +58,7 @@ public class PairingManager
         byte[] keyBytes = new byte[16];
         random.nextBytes(keyBytes);
         SecretKeySpec newKey = new SecretKeySpec(keyBytes, "AES");
-        String psk = Base64.getEncoder().encodeToString(newKey.getEncoded());
+        byte[] psk = newKey.getEncoded();
 
         // Connect to pairing device using pairing key.
         CoapsPskClient coapClient = new CoapsPskClient(deviceIp, PairingResource.PAIRING_PORT, PairingResource.PAIRING_KEY_ID, pairingKey);
@@ -66,8 +66,9 @@ public class PairingManager
         // Send our ID and the PSK to use with us.
         System.out.println("Sending pair request");
         CBORObject request = CBORObject.NewMap();
-        request.Add(PairingResource.AS_ID_KEY, asID);
-        request.Add(PairingResource.AS_PSK_KEY, psk);
+        request.Add(CBORObject.FromObject(PairingResource.AS_ID_KEY), asID);
+        request.Add(CBORObject.FromObject(PairingResource.AS_PSK_KEY), psk);
+        System.out.println("Request being sent as CBOR: " + request.toString());
         CBORObject reply = coapClient.sendRequest("pair", "post", request);
 
         System.out.println("Received reply: " + reply);
