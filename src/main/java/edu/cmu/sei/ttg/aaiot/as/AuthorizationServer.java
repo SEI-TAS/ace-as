@@ -37,7 +37,6 @@ import se.sics.ace.COSEparams;
 import se.sics.ace.Constants;
 import se.sics.ace.TimeProvider;
 import se.sics.ace.as.AccessTokenFactory;
-import se.sics.ace.as.DBConnector;
 import se.sics.ace.as.PDP;
 import se.sics.ace.coap.as.CoapDBConnector;
 import se.sics.ace.coap.as.CoapsAS;
@@ -103,7 +102,7 @@ public class AuthorizationServer implements ICredentialsStore
         dbCon = CoapDBConnector.getInstance(dbAdapter);
         this.pdp = new KissPDP(dbCon);
         coapServer = new CoapsAS(asId, dbCon, pdp, timeProvider, null, "token",
-                "introspect", CoAP.DEFAULT_COAP_SECURE_PORT, null, true);
+                "introspect", Integer.parseInt(Config.data.get("local_coaps_port")), null, true);
     }
 
     public Set<String> getClients() throws AceException
