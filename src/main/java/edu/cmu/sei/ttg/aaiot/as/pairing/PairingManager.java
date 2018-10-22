@@ -52,7 +52,7 @@ public class PairingManager
         this.credentialsStore = credentialsStore;
     }
 
-    public boolean pair(String asID, byte[] pairingKey, String deviceIp) throws Exception
+    public boolean pair(String asID, byte[] pairingKey, String deviceIp, int devicePort) throws Exception
     {
         // Generate a new, random AES-128 key.
         byte[] keyBytes = new byte[16];
@@ -61,7 +61,7 @@ public class PairingManager
         byte[] psk = newKey.getEncoded();
 
         // Connect to pairing device using pairing key.
-        CoapsPskClient coapClient = new CoapsPskClient(deviceIp, PairingResource.PAIRING_PORT, PairingResource.PAIRING_KEY_ID, pairingKey);
+        CoapsPskClient coapClient = new CoapsPskClient(deviceIp, devicePort, PairingResource.PAIRING_KEY_ID, pairingKey);
 
         // Send our ID and the PSK to use with us.
         System.out.println("Sending pair request");

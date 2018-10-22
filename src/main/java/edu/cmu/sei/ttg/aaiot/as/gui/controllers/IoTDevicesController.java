@@ -31,12 +31,16 @@ import edu.cmu.sei.ttg.aaiot.as.AuthorizationServer;
 import edu.cmu.sei.ttg.aaiot.as.Application;
 import edu.cmu.sei.ttg.aaiot.as.gui.ButtonCellHandler;
 import edu.cmu.sei.ttg.aaiot.as.gui.models.Device;
+import edu.cmu.sei.ttg.aaiot.as.pairing.PairingManager;
+import edu.cmu.sei.ttg.aaiot.pairing.PairingResource;
+import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
@@ -48,7 +52,7 @@ import java.util.Set;
 /**
  * Created by sebastianecheverria on 11/8/17.
  */
-public class IoTDevicesController
+public class IoTDevicesController implements IPairingHandler
 {
     private AuthorizationServer authorizationServer;
     private ButtonCellHandler<Device> removeButtonHandler;
@@ -56,6 +60,7 @@ public class IoTDevicesController
     @FXML private TableView<Device> devicesTableView;
     @FXML private GridPane gridPane;
     @FXML private TextField deviceIpTextField;
+    @FXML private TextField devicePortTextField;
 
     /**
      * Sets up the view.
@@ -65,6 +70,8 @@ public class IoTDevicesController
     public void initialize() throws Exception
     {
         authorizationServer = Application.getInstance().getAuthorizationServer();
+
+        devicePortTextField.setText(String.valueOf(PairingResource.PAIRING_PORT));
 
         // Setup the remove action.
         int actionsColumnIndex = 2;
@@ -106,6 +113,16 @@ public class IoTDevicesController
     }
 
     /**
+     * Action to start pairing with default key.
+     * @param actionEvent
+     */
+    public void pairWithDefaultKey(ActionEvent actionEvent)
+    {
+        pairIoTDevice(Application.DEFAULT_DEVICE_PAIRING_KEY);
+        fillDevicesTable();
+    }
+
+    /**
      * Starts the webcam to get a QR code.
      * @param actionEvent
      */
@@ -118,13 +135,11 @@ public class IoTDevicesController
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/QRCapture.fxml"));
             Parent pane = loader.load();
 
-            // Set up the IP address of the device.
-            String deviceIpAddress = deviceIpTextField.getText();
+            // Set up the IP address and port of the device.
             QRCaptureController controller = loader.getController();
-            controller.setIpAddress(deviceIpAddress);
+            controller.setPairingHandler(this);
 
             // Set up the window.
-
             Stage dialog = new Stage();
             dialog.setTitle("Scanning QR Code");
             dialog.setScene(new Scene(pane, 500, 500));
@@ -138,4 +153,41 @@ public class IoTDevicesController
             System.out.println("Error initializing the camera: " + e.toString());
         }
     }
+
+    /**
+     * Code to actually perform the pairing procedure with a client.
+     */
+    public boolean pairIoTDevice(byte[] pskBytes)
+    {
+        System.out.println("Started pairing");
+
+        String deviceIpAddress = deviceIpTextField.getText();
+        int devicePort = Integer.parseInt(devicePortTextField.getText());
+
+        try
+        {
+            AuthorizationServer authorizationServer = Application.getInstance().getAuthorizationServer();
+            String asId = authorizationServer.getAsId();
+            PairingManager pairingManager = new PairingManager(authorizationServer);
+            boolean success = pairingManager.pair(asId, pskBytes, deviceIpAddress, devicePort);
+            if(success)
+            {
+                Platform.runLater(() -> new Alert(Alert.AlertType.INFORMATION, "Paired completed successfully.").showAndWait());
+                System.out.println("Finished pairing");
+            }
+            else
+            {
+                Platform.runLater(() -> { new Alert(Alert.AlertType.WARNING, "Pairing was aborted since device did not respond.").showAndWait();});
+            }
+
+            return success;
+        }
+        catch(Exception e)
+        {
+            System.out.println("Error pairing: " + e.toString());
+            Platform.runLater(() -> new Alert(Alert.AlertType.ERROR, "Error during pairing: " + e.toString()).showAndWait());
+            return false;
+        }
+    }
+
 }

@@ -32,6 +32,7 @@ import edu.cmu.sei.ttg.aaiot.as.Application;
 import edu.cmu.sei.ttg.aaiot.as.gui.ButtonCellHandler;
 import edu.cmu.sei.ttg.aaiot.as.gui.models.Client;
 import edu.cmu.sei.ttg.aaiot.as.pairing.PairingManager;
+import edu.cmu.sei.ttg.aaiot.pairing.PairingResource;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -131,7 +132,7 @@ public class ClientsController
             String clientIpAddress = clientIpTextField.getText();
             String asId = authorizationServer.getAsId();
             PairingManager pairingManager = new PairingManager(authorizationServer);
-            boolean success = pairingManager.pair(asId, Application.CLIENT_PAIRING_KEY, clientIpAddress);
+            boolean success = pairingManager.pair(asId, Application.CLIENT_PAIRING_KEY, clientIpAddress, PairingResource.PAIRING_PORT);
             if(success)
             {
                 fillClientsTable();

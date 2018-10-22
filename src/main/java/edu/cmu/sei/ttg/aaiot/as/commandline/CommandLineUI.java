@@ -34,6 +34,7 @@ import edu.cmu.sei.ttg.aaiot.as.Application;
 import edu.cmu.sei.ttg.aaiot.as.pairing.PairingManager;
 import edu.cmu.sei.ttg.aaiot.as.pairing.QRCodeManager;
 import edu.cmu.sei.ttg.aaiot.config.Config;
+import edu.cmu.sei.ttg.aaiot.pairing.PairingResource;
 import se.sics.ace.AceException;
 
 import javax.imageio.ImageIO;
@@ -202,7 +203,7 @@ public class CommandLineUI
         System.out.println("Started pairing");
 
         PairingManager pairingManager = new PairingManager(authorizationServer);
-        pairingManager.pair(asId, psk, server);
+        pairingManager.pair(asId, psk, server, PairingResource.PAIRING_PORT);
 
         System.out.println("Finished pairing");
     }

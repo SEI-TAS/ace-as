@@ -30,9 +30,7 @@ package edu.cmu.sei.ttg.aaiot.as.gui.controllers;
 import com.github.sarxos.webcam.Webcam;
 import com.google.zxing.NotFoundException;
 import edu.cmu.sei.ttg.aaiot.as.Application;
-import edu.cmu.sei.ttg.aaiot.as.AuthorizationServer;
 import edu.cmu.sei.ttg.aaiot.threads.TaskThread;
-import edu.cmu.sei.ttg.aaiot.as.pairing.PairingManager;
 import edu.cmu.sei.ttg.aaiot.as.pairing.QRCodeManager;
 import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
@@ -65,7 +63,7 @@ public class QRCaptureController
     private boolean stopCamera;
     private boolean stopReadingQR;
 
-    private String ipAddress;
+    private IPairingHandler pairingHandler;
 
     /**
      * Initializes the component, setting up threads for the webcam and QR processing.
@@ -102,12 +100,12 @@ public class QRCaptureController
     }
 
     /**
-     * Sets the IP address of the device to pair.
-     * @param ipAddress
+     * Sets the pairing handler.
+     * @param pairingHandler
      */
-    public void setIpAddress(String ipAddress)
+    public void setPairingHandler(IPairingHandler pairingHandler)
     {
-        this.ipAddress = ipAddress;
+        this.pairingHandler = pairingHandler;
     }
 
     /**
@@ -202,7 +200,7 @@ public class QRCaptureController
                     if (pskBytes != null)
                     {
                         // Perform pairing.
-                        pairIoTDevice(pskBytes);
+                        pairingHandler.pairIoTDevice(pskBytes);
 
                         stopReadingQR = true;
 
@@ -257,37 +255,5 @@ public class QRCaptureController
         return contentInBytes;
     }
 
-    /**
-     * Code to actually perform the pairing procedure with a client.
-     */
-    public boolean pairIoTDevice(byte[] pskBytes)
-    {
-        System.out.println("Started pairing");
-
-        try
-        {
-            AuthorizationServer authorizationServer = Application.getInstance().getAuthorizationServer();
-            String asId = authorizationServer.getAsId();
-            PairingManager pairingManager = new PairingManager(authorizationServer);
-            boolean success = pairingManager.pair(asId, pskBytes, ipAddress);
-            if(success)
-            {
-                Platform.runLater(() -> new Alert(Alert.AlertType.INFORMATION, "Paired completed successfully.").showAndWait());
-                System.out.println("Finished pairing");
-            }
-            else
-            {
-                Platform.runLater(() -> { new Alert(Alert.AlertType.WARNING, "Pairing was aborted since device did not respond.").showAndWait();});
-            }
-
-            return success;
-        }
-        catch(Exception e)
-        {
-            System.out.println("Error pairing: " + e.toString());
-            Platform.runLater(() -> new Alert(Alert.AlertType.ERROR, "Error during pairing: " + e.toString()).showAndWait());
-            return false;
-        }
-    }
 }
 
