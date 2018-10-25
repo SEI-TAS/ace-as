@@ -32,6 +32,7 @@ import edu.cmu.sei.ttg.aaiot.as.Application;
 import edu.cmu.sei.ttg.aaiot.as.gui.ButtonCellHandler;
 import edu.cmu.sei.ttg.aaiot.as.gui.models.Client;
 import edu.cmu.sei.ttg.aaiot.as.pairing.PairingManager;
+import edu.cmu.sei.ttg.aaiot.network.CoapException;
 import edu.cmu.sei.ttg.aaiot.pairing.PairingResource;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -143,6 +144,13 @@ public class ClientsController
             {
                 new Alert(Alert.AlertType.WARNING, "Pairing was aborted since client did not respond.").showAndWait();
             }
+        }
+        catch(CoapException ex)
+        {
+            String errorMessage = "Problem pairing; server reported error " + ex.getErrorCode() + ": " +
+                    ex.getErrorName() + ". " + ex.getErrorDescription();
+            System.out.println(errorMessage);
+            new Alert(Alert.AlertType.ERROR, errorMessage).showAndWait();
         }
         catch(Exception e)
         {

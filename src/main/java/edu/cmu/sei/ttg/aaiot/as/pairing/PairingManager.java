@@ -28,6 +28,7 @@ DM18-0702
 package edu.cmu.sei.ttg.aaiot.as.pairing;
 
 import com.upokecenter.cbor.CBORObject;
+import edu.cmu.sei.ttg.aaiot.network.CoapException;
 import edu.cmu.sei.ttg.aaiot.network.CoapsPskClient;
 import edu.cmu.sei.ttg.aaiot.pairing.PairingResource;
 
@@ -52,7 +53,7 @@ public class PairingManager
         this.credentialsStore = credentialsStore;
     }
 
-    public boolean pair(String asID, byte[] pairingKey, String deviceIp, int devicePort) throws Exception
+    public boolean pair(String asID, byte[] pairingKey, String deviceIp, int devicePort) throws CoapException
     {
         // Generate a new, random AES-128 key.
         byte[] keyBytes = new byte[16];
@@ -66,7 +67,7 @@ public class PairingManager
         // Send our ID and the PSK to use with us.
         System.out.println("Sending pair request");
         CBORObject request = CBORObject.NewMap();
-        request.Add(CBORObject.FromObject(PairingResource.AS_ID_KEY), asID);
+        request.Add(CBORObject.FromObject(PairingResource.AS_ID_KEY), asID.getBytes());
         request.Add(CBORObject.FromObject(PairingResource.AS_PSK_KEY), psk);
         System.out.println("Request being sent as CBOR: " + request.toString());
         CBORObject reply = coapClient.sendRequest("pair", "post", request);
