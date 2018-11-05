@@ -81,8 +81,8 @@ public class PairingManager
         }
 
         // Get and store the device's ID, plus scopes if it was an IoT Resource Server.
-        String deviceId = reply.get(PairingResource.DEVICE_ID_KEY).AsString();
-        String info = reply.get(PairingResource.DEVICE_INFO_KEY).AsString();
+        String deviceId = reply.get(CBORObject.FromObject(PairingResource.DEVICE_ID_KEY)).AsString();
+        String info = reply.get(CBORObject.FromObject(PairingResource.DEVICE_INFO_KEY)).AsString();
         if(info.equals(""))
         {
             credentialsStore.storeClient(deviceId, newKey.getEncoded());

@@ -185,6 +185,7 @@ public class IoTDevicesController implements IPairingHandler
         catch(Exception e)
         {
             System.out.println("Error pairing: " + e.toString());
+            e.printStackTrace();
             Platform.runLater(() -> new Alert(Alert.AlertType.ERROR, "Error during pairing: " + e.toString()).showAndWait());
             return false;
         }
