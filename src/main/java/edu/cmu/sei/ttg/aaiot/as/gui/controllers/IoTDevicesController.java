@@ -44,6 +44,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Region;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
@@ -186,7 +187,11 @@ public class IoTDevicesController implements IPairingHandler
         {
             System.out.println("Error pairing: " + e.toString());
             e.printStackTrace();
-            Platform.runLater(() -> new Alert(Alert.AlertType.ERROR, "Error during pairing: " + e.toString()).showAndWait());
+            Platform.runLater(() -> {
+                Alert error = new Alert(Alert.AlertType.ERROR, "Error during pairing: " + e.toString());
+                error.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
+                error.showAndWait();
+            });
             return false;
         }
     }
