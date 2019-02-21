@@ -31,7 +31,6 @@ import COSE.*;
 import com.upokecenter.cbor.CBORObject;
 import edu.cmu.sei.ttg.aaiot.as.pairing.ICredentialsStore;
 import edu.cmu.sei.ttg.aaiot.config.Config;
-import org.eclipse.californium.core.coap.CoAP;
 import se.sics.ace.AceException;
 import se.sics.ace.COSEparams;
 import se.sics.ace.Constants;
@@ -39,7 +38,7 @@ import se.sics.ace.TimeProvider;
 import se.sics.ace.as.AccessTokenFactory;
 import se.sics.ace.as.PDP;
 import se.sics.ace.coap.as.CoapDBConnector;
-import se.sics.ace.coap.as.CoapsAS;
+import se.sics.ace.coap.as.DtlsAS;
 import se.sics.ace.examples.KissPDP;
 import se.sics.ace.examples.KissTime;
 import se.sics.ace.examples.PostgreSQLDBAdapter;
@@ -64,7 +63,7 @@ public class AuthorizationServer implements ICredentialsStore
     private Set<COSEparams> supportedCOSEParams = new HashSet<>();
 
     private PostgreSQLDBAdapter dbAdapter;
-    private CoapsAS coapServer = null;
+    private DtlsAS coapServer = null;
     private CoapDBConnector dbCon;
     private TimeProvider timeProvider;
     private KissPDP pdp;
@@ -101,7 +100,7 @@ public class AuthorizationServer implements ICredentialsStore
     {
         dbCon = CoapDBConnector.getInstance(dbAdapter);
         this.pdp = new KissPDP(dbCon);
-        coapServer = new CoapsAS(asId, dbCon, pdp, timeProvider, null, "token",
+        coapServer = new DtlsAS(asId, dbCon, pdp, timeProvider, null, "token",
                 "introspect", Integer.parseInt(Config.data.get("local_coaps_port")), null, true);
     }
 

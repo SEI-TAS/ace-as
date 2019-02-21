@@ -3,6 +3,6 @@
   "root_db_pwd": "",
   "db_user": "aceuser",
   "db_pwd": "password",
-  "token_duration_in_mins": "10",
+  "token_duration_in_mins": "1",
   "local_coaps_port": "5684"
 }
