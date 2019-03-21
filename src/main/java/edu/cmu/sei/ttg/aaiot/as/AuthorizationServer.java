@@ -31,7 +31,6 @@ import COSE.*;
 import com.upokecenter.cbor.CBORObject;
 import edu.cmu.sei.ttg.aaiot.as.pairing.ICredentialsStore;
 import edu.cmu.sei.ttg.aaiot.config.Config;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import se.sics.ace.AceException;
 import se.sics.ace.COSEparams;
 import se.sics.ace.Constants;
@@ -45,7 +44,6 @@ import se.sics.ace.examples.KissTime;
 import se.sics.ace.examples.PostgreSQLDBAdapter;
 
 import java.io.IOException;
-import java.security.Security;
 import java.sql.SQLException;
 import java.util.*;
 
@@ -72,9 +70,6 @@ public class AuthorizationServer implements ICredentialsStore
 
     public AuthorizationServer(String asId)
     {
-        // Manually add BouncyCastle as sec provider so we can use AES_CCM.
-        Security.insertProviderAt(new BouncyCastleProvider(), 1);
-
         this.asId = asId;
         supportedProfiles.add("coap_dtls");
         supportedKeyTypes.add("PSK");
