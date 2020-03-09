@@ -6,7 +6,7 @@ The following software needs to be installed for this project to compile and run
 * Gradle
 * PostgreSQL
 
-This project also depends on the ace-java (https://bitbucket.org/lseitz/ace-java) and aaiot-lib (https://github.com/SEI-TTG/aaiot-lib) 
+This project also depends on the ace-java (https://bitbucket.org/marco-tiloca-sics/ace-java) and aaiot-lib (https://github.com/SEI-TTG/aaiot-lib) 
 libraries. You should download, compile, and deploy both of them to a local Maven repo, so that this project will
 find them when resolving its dependencies.
  
