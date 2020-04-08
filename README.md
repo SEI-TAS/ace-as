@@ -6,13 +6,10 @@ The following software needs to be installed for this project to compile and run
 * Gradle
 * PostgreSQL
 
-This project also depends on the ace-java (https://bitbucket.org/marco-tiloca-sics/ace-java) and aaiot-lib (https://github.com/SEI-TTG/aaiot-lib) 
-libraries. You should download, compile, and deploy both of them to a local Maven repo, so that this project will
-find them when resolving its dependencies.
+This project also depends on the ace-java (https://bitbucket.org/sebastian_echeverria/ace-java-postgres) and aaiot-lib (https://github.com/SEI-TTG/aaiot-lib) libraries. You should download, compile, and deploy both of them to a local Maven repo, so that this project will find them when resolving its dependencies.
  
 ## Configuration
-The only minimum configuration that is needed before running ace-as is in the config.json file, the "root_db_pwd" 
-parameter. This has to be set to the postgres (root) password of the PostgreSQL installation of the current computer.
+The only minimum configuration that is needed before running ace-as is in the config.json file, the "root_db_pwd" parameter. This has to be set to the postgres (root) password of radthe PostgreSQL installation of the current computer.
  
 ## Usage
-The main entry class is edu.cmu.sei.ttg.aaiot.as.gui.FXApplication. This starts the GUI.
+The main entry class is edu.cmu.sei.ttg.aaiot.as.gui.FXApplication. This starts the GUI. A simple way to start it from gradle is with `./gradlew run` .
