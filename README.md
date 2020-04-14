@@ -7,6 +7,8 @@ The following software needs to be installed for this project to compile and run
 * PostgreSQL
 
 This project also depends on the ace-java (https://bitbucket.org/sebastian_echeverria/ace-java-postgres) and aaiot-lib (https://github.com/SEI-TTG/aaiot-lib) libraries. You should download, compile, and deploy both of them to a local Maven repo, so that this project will find them when resolving its dependencies.
+
+If it doesn't exist, the database used by ace-as as defined by the ace-java library will be automatically created when ace-as starts.
  
 ## Configuration
 Configuration parameters can be changed in the file config.json. The only minimum configuration that is needed before running ace-as is the "root_db_pwd" parameter. 
@@ -20,6 +22,6 @@ Configuration parameters can be changed in the file config.json. The only minimu
 ## Usage
 The main entry class is edu.cmu.sei.ttg.aaiot.as.gui.FXApplication. This starts the GUI. A simple way to start it from gradle is with `./gradlew run` 
 
-Credentials and tokens are stored in the PostgresQL database. Clear the DB or the appropriate tables to remove them.
+Credentials and tokens are stored in the PostgresQL database. Delete the DB manually or clear the appropriate tables to remove them.
 
 For more information, see https://github.com/SEI-TAS/ace-client/wiki
