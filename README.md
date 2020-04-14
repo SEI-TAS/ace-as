@@ -21,3 +21,5 @@ Configuration parameters can be changed in the file config.json. The only minimu
 The main entry class is edu.cmu.sei.ttg.aaiot.as.gui.FXApplication. This starts the GUI. A simple way to start it from gradle is with `./gradlew run` 
 
 Credentials and tokens are stored in the PostgresQL database. Clear the DB or the appropriate tables to remove them.
+
+For more information, see https://github.com/SEI-TAS/ace-client/wiki
