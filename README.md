@@ -16,7 +16,7 @@ Configuration parameters can be changed in the file config.json. The only minimu
  * id: the ID or name used to identify this AS.
  * root_db_pwd: this has to be set to the postgres (root) password of the PostgreSQL installation of the current computer.
  * db_user and db_pwd: user and password to be used to access the ace DB.
- * token_duration_in_mins: how many minutes an issued token will be valid.
+ * token_duration_in_mins: how many minutes an issued token will be valid. NOTE: this will only be updated for a given RS when it is paired. If this value is changed after a RS is already paired, it will have to be un-paired and re-paired for this value to be updated.
  * local_coaps_port: port used by the AS for COAPS connections.
  * drop_existing_db: "false" by default, set to "true" to remove and recreate the DB and user when ace-as starts.
  

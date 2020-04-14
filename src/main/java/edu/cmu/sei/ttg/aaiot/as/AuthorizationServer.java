@@ -55,7 +55,7 @@ public class AuthorizationServer implements ICredentialsStore
     private static final String AAIOT_ACE_DB_NAME = "aaiotacedb";
 
     private String asId;
-    private long tokenDurationInSecs;
+    private long tokenDurationInMS;
 
     private Set<String> supportedProfiles = new HashSet<>();
     private Set<String> supportedKeyTypes = new HashSet<>();
@@ -81,7 +81,7 @@ public class AuthorizationServer implements ICredentialsStore
         dbAdapter = new PostgreSQLDBAdapter();
         dbAdapter.setParams(Config.data.get("db_user"), Config.data.get("db_pwd"), AAIOT_ACE_DB_NAME, null);
 
-        tokenDurationInSecs = Long.parseLong(Config.data.get("token_duration_in_mins")) * 60;
+        tokenDurationInMS = Long.parseLong(Config.data.get("token_duration_in_mins")) * 60 * 1000;
     }
 
     public String getAsId()
@@ -142,7 +142,7 @@ public class AuthorizationServer implements ICredentialsStore
         Set<String> auds = new HashSet<>();
         auds.add(rsName);
 
-        long resouceServerKnownExpiration = tokenDurationInSecs;
+        long resouceServerKnownExpiration = tokenDurationInMS;
 
         dbCon.addRS(rsName, supportedProfiles, scopes, auds, supportedKeyTypes, supportedTokenTypes, supportedCOSEParams,
                 resouceServerKnownExpiration, PSK, PSK,null);
