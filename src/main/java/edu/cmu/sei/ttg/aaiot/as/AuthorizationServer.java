@@ -91,7 +91,10 @@ public class AuthorizationServer implements ICredentialsStore
 
     public void createDB(String rootPwd) throws AceException
     {
-        //dbAdapter.wipeDB(rootPwd);
+        if(Config.data.get("drop_existing_db").equals("true")) {
+            System.out.println("Dropping existing DB");
+            dbAdapter.wipeDB(rootPwd);
+        }
         dbAdapter.createUser(rootPwd);
         dbAdapter.createDBAndTables(rootPwd);
     }

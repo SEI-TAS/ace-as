@@ -4,5 +4,6 @@
   "db_user": "aceuser",
   "db_pwd": "password",
   "token_duration_in_mins": "1",
-  "local_coaps_port": "5684"
+  "local_coaps_port": "5684",
+  "drop_existing_db": "false"
 }

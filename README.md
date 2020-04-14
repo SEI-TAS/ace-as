@@ -18,10 +18,11 @@ Configuration parameters can be changed in the file config.json. The only minimu
  * db_user and db_pwd: user and password to be used to access the ace DB.
  * token_duration_in_mins: how many minutes an issued token will be valid.
  * local_coaps_port: port used by the AS for COAPS connections.
+ * drop_existing_db: "false" by default, set to "true" to remove and recreate the DB and user when ace-as starts.
  
 ## Usage
 The main entry class is edu.cmu.sei.ttg.aaiot.as.gui.FXApplication. This starts the GUI. A simple way to start it from gradle is with `./gradlew run` 
 
-Credentials and tokens are stored in the PostgresQL database. Delete the DB manually or clear the appropriate tables to remove them.
+Credentials and tokens are stored in the PostgresQL database. Delete the DB manually, set the config.json flag to drop the DB when restarting, or clear the appropriate tables to remove them.
 
 For more information, see https://github.com/SEI-TAS/ace-client/wiki
